@@ -3,412 +3,436 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StreamHub - Watch Free Online</title>
+    <title>StreamHub | Content Delivery</title>
+    <!-- Load Tailwind CSS via CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Use Inter Font -->
     <style>
-        /* Custom styles for modern aesthetics and animations */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
-        
-        * {
-            box-sizing: border-box;
-        }
-
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #0d1117; /* Dark background */
+            min-height: 100vh;
         }
-
-        .gradient-text {
-            /* Clean blue/green gradient for primary text */
-            background: linear-gradient(90deg, #3b82f6 0%, #10b981 100%); 
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+        .content-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
-
-        .card-bg {
-            background-color: #1f2937; /* Slightly lighter card background */
+        .content-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
         }
-
-        .spinner {
-            border-top-color: #3b82f6;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        .modal-bg {
-            /* Semi-transparent dark overlay */
-            background-color: rgba(0, 0, 0, 0.9);
-        }
-
-        .modal-content-custom {
-            background-color: #0d1117;
-            border: 1px solid #374151;
+        .text-shadow-custom {
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
         }
     </style>
 </head>
-<body class="min-h-screen p-4 sm:p-8">
-    <div class="max-w-7xl mx-auto">
-        
-        <header class="text-center mb-10 pt-4 sm:pt-8">
-            <h1 class="text-6xl sm:text-7xl font-extrabold mb-2 gradient-text">
-                StreamHub
-            </h1>
-            <p class="text-xl sm:text-2xl text-gray-400 font-light">
-                Premium Streams. Zero Cost.
-            </p>
+<body class="bg-gray-900 text-gray-100 antialiased">
+
+    <!-- Main Application Container -->
+    <div id="app" class="min-h-screen flex flex-col">
+
+        <!-- Header/Navbar -->
+        <header class="bg-gray-800 shadow-lg sticky top-0 z-10">
+            <div class="container mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+                <h1 class="text-3xl font-extrabold text-indigo-400 tracking-wider">
+                    Stream<span class="text-white">Hub</span>
+                </h1>
+                
+                <!-- Search Input -->
+                <div class="w-full md:w-1/3 relative">
+                    <input type="text" id="search-input" placeholder="Search by title or tag..."
+                           class="w-full py-2 pl-10 pr-4 bg-gray-700 border-2 border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 text-white"
+                           onkeyup="handleSearch()">
+                    <svg class="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex space-x-3">
+                    <a href="https://t.me/+oOdTY-zbwCY3MzA1" target="_blank"
+                       class="flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md transition duration-150 ease-in-out transform hover:scale-105">
+                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M18.38 6.55L4.46 12.02c-.8.32-.8 1.48 0 1.8l3.14 1.12 7.72-4.99c.35-.22.65-.1.35.15L8.97 17.5l.02.01-.01-.01c-.13.12-.2.27-.2.43 0 .44.52.68.84.45L12 18l.02.01 4.57-3.21c.2-.14.47-.07.57.17l2.12 6.01c.21.58.74.83 1.28.62.53-.21.78-.74.62-1.28l-2.73-7.75c-.17-.46-.37-.62-.57-.65L18.38 6.55z"/></svg>
+                        Join Telegram
+                    </a>
+                    <button onclick="showRequestModal()"
+                            class="flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg shadow-md transition duration-150 ease-in-out transform hover:scale-105">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        Request Content
+                    </button>
+                </div>
+            </div>
         </header>
 
-        <div class="flex justify-center mb-12">
-            <div class="relative w-full max-w-2xl">
-                <input 
-                    type="text" 
-                    id="search-input" 
-                    placeholder="Search for a video, series, or tag..." 
-                    oninput="handleSearch()"
-                    class="w-full py-4 pl-12 pr-6 text-lg text-white bg-gray-800 rounded-full shadow-lg focus:ring-4 focus:ring-blue-500 focus:border-blue-500 border border-gray-700 transition duration-300"
-                >
-                <svg class="absolute left-4 top-1/2 transform -translate-y-1/2 h-6 w-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-            </div>
-        </div>
-
-        <div id="loading" class="text-center py-20 text-white transition-opacity duration-500">
-            <div class="spinner w-12 h-12 mx-auto rounded-full border-4 border-gray-700"></div>
-            <p class="mt-4 text-lg text-gray-400">Loading Content...</p>
-        </div>
-
-        <div id="content-grid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
-            </div>
-
-        <div id="empty-state" class="text-center text-white py-20 hidden">
-            <div class="text-7xl mb-4">🤷‍♂️</div>
-            <p class="text-2xl font-semibold mb-2">Nothing matches your search.</p>
-            <p class="text-gray-400">Try broadening your search or check the recommendations below.</p>
-        </div>
-
-        <section class="mt-20">
-            <h2 class="text-3xl font-bold text-white mb-6 border-b border-gray-700 pb-2">
-                ⚡ Discover More
-            </h2>
-            <div id="discover-more-content" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
-                </div>
-            <div id="discover-loading" class="text-center py-10 text-white hidden">
-                <div class="spinner w-8 h-8 mx-auto rounded-full border-4 border-gray-700"></div>
-                <p class="mt-2 text-md text-gray-500">Finding recommendations...</p>
-            </div>
-        </section>
-    </div>
-
-    <div id="links-modal" class="fixed inset-0 modal-bg z-50 flex items-center justify-center p-4 hidden transition duration-300 ease-out">
-        <div class="modal-content-custom rounded-xl max-w-md w-full max-h-[90vh] overflow-y-auto p-6 relative shadow-2xl transition-all duration-300">
-            <button class="close-btn absolute top-4 right-4 bg-red-600 hover:bg-red-700 text-white w-8 h-8 rounded-full text-xl leading-none transition-transform duration-300 transform hover:rotate-90" onclick="closeLinksModal()">&times;</button>
-            <h2 class="text-3xl font-bold text-blue-400 mb-2" id="links-modal-title"></h2>
-            <p class="text-gray-400 mb-6 text-sm" id="links-modal-subtitle"></p>
+        <!-- Main Content Grid -->
+        <main class="container mx-auto px-4 py-8 flex-grow">
+            <h2 class="text-xl md:text-2xl font-bold mb-6 text-white border-b border-gray-700 pb-2">Latest Content</h2>
             
-            <ul class="space-y-3" id="links-list">
-                </ul>
+            <!-- Loading Indicator -->
+            <div id="loading-indicator" class="text-center py-12 hidden">
+                <svg class="animate-spin h-8 w-8 text-indigo-400 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <p class="mt-4 text-indigo-400">Loading Content...</p>
+            </div>
+
+            <!-- Content Grid -->
+            <div id="content-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                <!-- Content cards will be injected here by JavaScript -->
+            </div>
+
+            <!-- Pagination Controls -->
+            <div id="pagination-controls" class="flex justify-center mt-10 space-x-4">
+                <button id="prev-btn" onclick="changePage(-1)" disabled class="px-6 py-2 bg-gray-700 text-gray-300 font-semibold rounded-lg shadow-md transition duration-150 disabled:opacity-50 hover:bg-gray-600">
+                    Previous
+                </button>
+                <span id="page-info" class="self-center text-lg text-gray-400">Page 1 of 1</span>
+                <button id="next-btn" onclick="changePage(1)" disabled class="px-6 py-2 bg-gray-700 text-gray-300 font-semibold rounded-lg shadow-md transition duration-150 disabled:opacity-50 hover:bg-gray-600">
+                    Next
+                </button>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="bg-gray-800 p-4 mt-8">
+            <div class="container mx-auto text-center text-gray-500 text-sm">
+                &copy; 2024 StreamHub. All rights reserved. Backend API running on Flask/MongoDB.
+            </div>
+        </footer>
+
+    </div>
+
+    <!-- Content Detail Modal -->
+    <div id="detail-modal" class="fixed inset-0 bg-gray-900 bg-opacity-80 backdrop-blur-sm z-50 hidden items-center justify-center p-4" onclick="closeModal(event)">
+        <div class="bg-gray-800 p-6 sm:p-8 rounded-xl shadow-2xl max-w-lg w-full transform transition-all duration-300 scale-95 opacity-0" id="detail-card">
+            <button onclick="closeModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white transition duration-150">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+            
+            <img id="modal-thumbnail" class="w-full h-48 object-cover rounded-lg mb-4 border border-gray-700" alt="Thumbnail Placeholder">
+            
+            <h3 id="modal-title" class="text-3xl font-bold text-indigo-400 mb-2"></h3>
+            <p class="text-sm text-gray-400 mb-4">Type: <span id="modal-type" class="font-semibold text-white"></span></p>
+
+            <div class="flex items-center justify-between border-t border-gray-700 pt-4">
+                <div class="flex items-center text-lg text-green-400">
+                    <svg class="w-5 h-5 mr-1" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zm0 13c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/><path d="M12 9c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+                    <span id="modal-views" class="font-bold"></span> Views
+                </div>
+                <div id="modal-tags" class="text-sm text-gray-500"></div>
+            </div>
+
+            <!-- Links Section -->
+            <div class="mt-6">
+                <h4 class="text-xl font-semibold mb-3 text-white border-b border-gray-700 pb-1">Watch Links</h4>
+                <div id="modal-links" class="space-y-3">
+                    <!-- Links will be injected here -->
+                </div>
+                <p id="no-links-message" class="text-gray-500 italic mt-3 hidden">No streaming links available yet.</p>
+            </div>
         </div>
     </div>
 
-    <div class="fixed bottom-6 right-6 flex flex-col space-y-3">
-        <a href="https://teluguxxx.vercel.app/" target="_blank" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-full shadow-2xl transition duration-300 transform hover:scale-105 flex items-center">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 mr-2" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.68l-7.76-13.44h15.52L12 21.68zM12 2.32L4.24 15.76h15.52L12 2.32z"/></svg>
-            Visit Official
-        </a>
-        <a href="https://t.me/+oOdTY-zbwCY3MzA1" target="_blank" class="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 px-6 rounded-full shadow-2xl transition duration-300 transform hover:scale-105 flex items-center">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 mr-2" viewBox="0 0 24 24" fill="currentColor"><path d="M18.3 5.4l-14.7 6.4c-.6.3-.6.7 0 1l3.5 1.1 9.1-5.7c.4-.3.7-.1.4.2l-7.3 6.6-1.9 4.8c-.2.6-.5.7-.9.4l-3.3-2.1c-.5-.3-.4-.5 0-.7l16.1-9.5c.6-.3.6-.6 0-.9z"/></svg>
-            Join Telegram
-        </a>
+    <!-- Simple Message Modal for Request Content -->
+    <div id="request-modal" class="fixed inset-0 bg-gray-900 bg-opacity-80 backdrop-blur-sm z-50 hidden items-center justify-center p-4" onclick="closeRequestModal(event)">
+        <div class="bg-gray-800 p-6 sm:p-8 rounded-xl shadow-2xl max-w-sm w-full transform transition-all duration-300 scale-95 opacity-0">
+            <h3 class="text-2xl font-bold text-indigo-400 mb-4">Request Content</h3>
+            <p class="text-gray-300 mb-6">
+                To request new content, please use our official Telegram bot. Click the button below to join the chat and submit your request!
+            </p>
+            <a href="https://t.me/+oOdTY-zbwCY3MzA1" target="_blank"
+               class="block w-full text-center py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition duration-150 ease-in-out transform hover:scale-[1.02]">
+                Open Telegram Bot
+            </a>
+            <button onclick="closeRequestModal()" class="mt-4 text-gray-400 hover:text-white w-full">
+                Close
+            </button>
+        </div>
     </div>
 
     <script>
-        // --- SECURITY/ANTI-INSPECTION LOGIC (UNCHANGED) ---
-        const TELEGRAM_URL = "https://t.me/+oOdTY-zbwCY3MzA1";
+        // Configuration: Now explicitly pointing to your deployed Koyeb backend.
+        const API_BASE_URL = 'https://confident-jemima-school1660440-5a325843.koyeb.app';
         
-        function redirectTelegram() {
-            window.location.href = TELEGRAM_URL;
-        }
+        let currentPage = 1;
+        let totalPages = 1;
+        let currentSearchQuery = '';
+        let currentTimeout = null;
 
-        document.addEventListener('contextmenu', function(e) {
-            e.preventDefault();
-            redirectTelegram();
-        });
-
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'F12') {
-                e.preventDefault();
-                redirectTelegram();
-            }
-            if (e.ctrlKey || e.metaKey) { 
-                const key = e.key.toLowerCase();
-                if ((e.shiftKey && (key === 'i' || key === 'j' || key === 'c')) || key === 'u') {
-                    e.preventDefault();
-                    redirectTelegram();
-                }
-            }
-        });
-
-        // --- APPLICATION LOGIC (CRITICAL CHANGE HERE) ---
-        let allContent = [];
-        
-        // !!! IMPORTANT: REPLACE THIS PLACEHOLDER WITH YOUR KOYEB/BACKEND APP URL !!!
-        // This MUST be the URL of your Python Flask/API server, NOT the Vercel URL.
-        const API_BASE_URL = 'https://confident-jemima-school1660440-5a325843.koyeb.app'; // e.g., https://my-streamhub-app.koyeb.app
-        
-        // API Endpoints now use the hardcoded base URL
-        const API_URL = API_BASE_URL + '/api/content';
-        const SIMILAR_API_URL = API_BASE_URL + '/api/content/similar/';
-        
-        const loadingElement = document.getElementById('loading');
-        const grid = document.getElementById('content-grid');
-        const emptyState = document.getElementById('empty-state');
-        const discoverGrid = document.getElementById('discover-more-content');
-        const discoverLoading = document.getElementById('discover-loading');
+        // Utility function to safely get elements
+        const getEl = (id) => document.getElementById(id);
 
         /**
-         * Fetches all content from the API.
+         * Renders the fetched content into the grid.
+         * @param {Array} items - The list of content objects.
          */
-        async function fetchContent() {
-            if (API_BASE_URL === 'YOUR_KOYEB_API_URL') {
-                showEmptyState("Configuration Error", "Please update API_BASE_URL in the JavaScript with your actual backend URL.");
+        function renderContent(items) {
+            const grid = getEl('content-grid');
+            grid.innerHTML = ''; // Clear existing content
+
+            if (items.length === 0) {
+                grid.innerHTML = '<div class="col-span-full text-center py-12 text-gray-500 italic">No content found matching your search criteria.</div>';
                 return;
             }
+
+            items.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'content-card bg-gray-800 rounded-xl overflow-hidden shadow-xl border border-gray-700 cursor-pointer';
+                card.onclick = () => openDetailModal(item._id);
+
+                // Use placeholder image if no thumbnail URL is provided
+                const thumbnailUrl = item.thumbnail_url || `https://placehold.co/600x400/1F2937/9CA3AF?text=${encodeURIComponent(item.title)}`;
+                
+                card.innerHTML = `
+                    <div class="relative h-48 bg-gray-700">
+                        <img src="${thumbnailUrl}" alt="${item.title}" 
+                             onerror="this.onerror=null;this.src='https://placehold.co/600x400/1F2937/9CA3AF?text=StreamHub+Image+Error';"
+                             class="w-full h-full object-cover">
+                        <div class="absolute inset-0 bg-black bg-opacity-40 flex items-end p-4">
+                            <h3 class="text-xl font-bold text-white text-shadow-custom leading-tight">${item.title}</h3>
+                        </div>
+                    </div>
+                    <div class="p-4">
+                        <p class="text-sm text-indigo-400 font-medium mb-2">${item.type.toUpperCase()}</p>
+                        <div class="flex justify-between items-center text-sm text-gray-400">
+                            <div class="flex items-center">
+                                <svg class="w-4 h-4 mr-1 text-green-400" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zm0 13c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/></svg>
+                                <span>${item.views.toLocaleString()} Views</span>
+                            </div>
+                            <span class="italic text-xs">${new Date(item.created_at).toLocaleDateString()}</span>
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        /**
+         * Fetches content from the backend API.
+         * @param {string} query - Optional search query for title/tags.
+         */
+        async function fetchContent(query = '') {
+            getEl('loading-indicator').classList.remove('hidden');
+            getEl('content-grid').innerHTML = ''; // Clear grid before loading
+
+            let url = `${API_BASE_URL}/api/content?page=${currentPage}&limit=12`;
+            if (query) {
+                // Using 'tag' filter for simple search based on the current Flask API design
+                url += `&tag=${encodeURIComponent(query)}`;
+            }
             
-            loadingElement.classList.remove('hidden');
             try {
-                const response = await fetch(API_URL);
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
                 const result = await response.json();
                 
-                if (result.success && Array.isArray(result.data)) {
-                    allContent = result.data;
-                    displayContent();
-                    if (allContent.length > 0 && allContent[0].tags && allContent[0].tags.length > 0) {
-                        fetchSimilarContent(allContent[0].tags.join(','));
-                    }
-                } else {
-                    showEmptyState("No content available yet.", "Use the Telegram bot to add your first video or series!");
-                }
+                renderContent(result.data);
+                
+                // Update pagination info
+                totalPages = result.pagination.pages;
+                getEl('page-info').textContent = `Page ${currentPage} of ${totalPages}`;
+                getEl('prev-btn').disabled = currentPage <= 1;
+                getEl('next-btn').disabled = currentPage >= totalPages;
+
             } catch (error) {
-                console.error('Error fetching content:', error);
-                showEmptyState("Failed to load content.", "Check your API_BASE_URL configuration or backend status.");
+                console.error("Failed to fetch content:", error);
+                getEl('content-grid').innerHTML = '<div class="col-span-full text-center py-12 text-red-400 font-semibold">Error loading content. Please check the backend connection.</div>';
             } finally {
-                loadingElement.classList.add('hidden');
+                getEl('loading-indicator').classList.add('hidden');
             }
         }
-        
-        // --- NEW VIEW COUNT TRACKING FUNCTION ---
+
         /**
-         * Tracks a view for a given content ID.
+         * Handles page changes.
+         * @param {number} direction - 1 for next, -1 for previous.
          */
-        async function trackView(contentId) {
+        function changePage(direction) {
+            const newPage = currentPage + direction;
+            if (newPage >= 1 && newPage <= totalPages) {
+                currentPage = newPage;
+                fetchContent(currentSearchQuery);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        /**
+         * Handles search input with debouncing.
+         */
+        function handleSearch() {
+            clearTimeout(currentTimeout);
+            currentTimeout = setTimeout(() => {
+                const query = getEl('search-input').value.trim();
+                if (query !== currentSearchQuery) {
+                    currentSearchQuery = query;
+                    currentPage = 1;
+                    fetchContent(currentSearchQuery);
+                }
+            }, 500); // 500ms debounce
+        }
+
+        /**
+         * Tracks a view for the given content ID.
+         * Note: This is a fire-and-forget call for performance.
+         * @param {string} id 
+         */
+        async function trackView(id) {
             try {
-                await fetch(API_BASE_URL + '/api/track-view', {
+                const response = await fetch(`${API_BASE_URL}/api/track-view`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ content_id: contentId })
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ content_id: id })
                 });
+                if (!response.ok) {
+                    console.warn(`View tracking failed for ${id}: ${response.statusText}`);
+                }
             } catch (error) {
                 console.error('Error tracking view:', error);
             }
         }
-        
-        // --- MODIFIED RENDER CONTENT CARDS FUNCTION ---
-        /**
-         * Renders content cards in a specified container.
-         * Now includes a view count badge.
-         */
-        function renderContentCards(contentArray, container) {
-            container.innerHTML = contentArray.map(item => {
-                const typeClass = item.type === 'Video' 
-                    ? 'bg-red-600' 
-                    : 'bg-green-500';
-                
-                const fallbackImage = 'https://placehold.co/280x400/1f2937/d1d5db?text=' + encodeURIComponent(item.title || 'No Title');
-                const linksText = `${item.links.length} ${item.links.length === 1 ? 'Link' : 'Links'}`;
-                const views = item.views || 0; // Get views from the item data
 
-                return `
-                    <div class="content-card card-bg rounded-xl shadow-lg hover:shadow-2xl transform hover:-translate-y-1 transition duration-300 cursor-pointer group border border-gray-700 overflow-hidden" onclick="handleCardClick('${item._id}', '${item.type}')">
-                        <div class="relative">
-                            <img class="w-full h-64 object-cover transition-opacity duration-300 group-hover:opacity-80" 
-                                 src="${item.thumbnail_url}" 
-                                 alt="${item.title}"
-                                 onerror="this.onerror=null;this.src='${fallbackImage}';">
-                            
-                            <span class="absolute bottom-2 left-2 px-3 py-1 text-xs font-semibold text-white rounded-full ${typeClass} shadow-md">
-                                ${item.type}
-                            </span>
-                            
-                            <div class="absolute top-2 right-2 bg-black bg-opacity-70 text-white px-2 py-1 rounded-full text-xs flex items-center">
-                                <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                    <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/>
-                                    <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"/>
-                                </svg>
-                                ${views}
-                            </div>
-                        </div>
-                        <div class="p-4">
-                            <h3 class="text-lg font-bold text-white mb-1 truncate">${item.title}</h3>
-                            <p class="text-gray-400 text-sm mb-3">
-                                ${linksText}
-                            </p>
-                            <button class="w-full py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition duration-300 shadow-md">
-                                Watch Stream
-                            </button>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        // --- MODIFIED HANDLE CARD CLICK FUNCTION ---
         /**
-         * Handles the click action on a content card based on content type.
-         * Now tracks the view before redirecting or opening the modal.
+         * Fetches single item detail, updates modal, tracks view, and shows modal.
+         * @param {string} id 
          */
-        function handleCardClick(contentId, contentType) {
-            const content = allContent.find(item => item._id === contentId);
-            if (!content || content.links.length === 0) {
-                console.error("No streaming links found for this content.");
-                return;
-            }
+        async function openDetailModal(id) {
+            const modal = getEl('detail-modal');
+            const modalCard = getEl('detail-card');
             
-            // Track the view before proceeding
-            trackView(contentId);
-
-            if (contentType === 'Video' && content.links.length === 1) {
-                // Direct navigation for single-link content (Video)
-                window.location.href = content.links[0].url;
-            } else {
-                // Open selection modal for multi-link content (Series)
-                openLinksModal(content);
-            }
-        }
-
-
-        /**
-         * Filters content based on the search input and renders the main grid.
-         */
-        function displayContent() {
-            const searchTerm = document.getElementById('search-input').value.toLowerCase().trim();
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            // Animate in
+            setTimeout(() => {
+                modalCard.classList.remove('scale-95', 'opacity-0');
+                modalCard.classList.add('scale-100', 'opacity-100');
+            }, 10);
             
-            const filteredContent = allContent.filter(item => {
-                const titleMatch = item.title && item.title.toLowerCase().includes(searchTerm);
-                const tagMatch = item.tags && item.tags.some(tag => tag.includes(searchTerm));
-                return titleMatch || tagMatch;
-            });
+            // Clear previous content
+            getEl('modal-title').textContent = 'Loading...';
+            getEl('modal-type').textContent = '';
+            getEl('modal-views').textContent = '...';
+            getEl('modal-tags').textContent = '';
+            getEl('modal-links').innerHTML = '';
+            getEl('no-links-message').classList.add('hidden');
 
-            if (filteredContent.length === 0) {
-                renderContentCards([], grid);
-                emptyState.classList.remove('hidden');
-                return;
-            }
-
-            emptyState.classList.add('hidden');
-            renderContentCards(filteredContent, grid);
-        }
-
-        let searchTimeout;
-        function handleSearch() {
-            clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(() => {
-                displayContent();
-            }, 300); 
-        }
-
-        function showEmptyState(title, subtitle) {
-            grid.innerHTML = '';
-            document.getElementById('empty-state').querySelector('p:nth-child(2)').textContent = title;
-            document.getElementById('empty-state').querySelector('p:nth-child(3)').textContent = subtitle;
-            emptyState.classList.remove('hidden');
-        }
-
-
-        /**
-         * Opens the Links Modal for selection.
-         */
-        function openLinksModal(content) {
-            document.getElementById('links-modal-title').textContent = content.title;
-            document.getElementById('links-modal-subtitle').textContent = `Select an episode or stream:`;
-            
-            const linksList = document.getElementById('links-list');
-            
-            linksList.innerHTML = content.links.map(link => `
-                <li class="link-item">
-                    <button onclick="window.location.href='${link.url}'" 
-                            class="block w-full py-3 px-4 bg-gray-800 text-white font-medium rounded-lg hover:bg-green-600 transition duration-300 text-left shadow-md">
-                        <span class="text-blue-400 font-bold">${link.episode_title}</span> 
-                        </button>
-                </li>
-            `).join('');
-
-            document.getElementById('links-modal').classList.remove('hidden');
-            document.getElementById('links-modal').classList.add('flex');
-        }
-
-        /**
-         * Closes the Links Modal.
-         */
-        function closeLinksModal() {
-            document.getElementById('links-modal').classList.add('hidden');
-            document.getElementById('links-modal').classList.remove('flex');
-        }
-        
-        /**
-         * Fetches and displays similar content based on tags.
-         */
-        async function fetchSimilarContent(tagsString) {
-            const tags = tagsString.split(',').map(t => t.trim()).filter(t => t.length > 0);
-            if (tags.length === 0) {
-                 discoverGrid.innerHTML = '<p class="text-gray-500 col-span-5 text-center">No relevant tags for discovery.</p>';
-                 return;
-            }
-
-            discoverLoading.classList.remove('hidden');
-            discoverGrid.innerHTML = '';
-            
             try {
-                // Fetch up to 10 similar items
-                const response = await fetch(SIMILAR_API_URL + tags.join(','));
-                const result = await response.json();
+                // 1. Track the view (fire-and-forget)
+                await trackView(id);
 
-                if (result.success && Array.isArray(result.data) && result.data.length > 0) {
-                    // Show top 5 recommendations
-                    const uniqueContent = result.data.slice(0, 5); 
-                    renderContentCards(uniqueContent, discoverGrid);
+                // 2. Fetch the updated content details (including the potentially new view count)
+                const response = await fetch(`${API_BASE_URL}/api/content/${id}`);
+                if (!response.ok) {
+                    throw new Error("Content detail not found.");
+                }
+                const result = await response.json();
+                const item = result.data;
+                
+                // 3. Populate modal
+                getEl('modal-title').textContent = item.title;
+                getEl('modal-type').textContent = item.type.toUpperCase();
+                getEl('modal-views').textContent = item.views.toLocaleString();
+                
+                // Tags
+                getEl('modal-tags').innerHTML = item.tags.map(tag => 
+                    `<span class="bg-gray-700 text-gray-300 px-3 py-1 rounded-full text-xs font-medium mr-2">${tag}</span>`
+                ).join('');
+
+                // Thumbnail
+                const thumbnailUrl = item.thumbnail_url || `https://placehold.co/600x400/1F2937/9CA3AF?text=${encodeURIComponent(item.title)}`;
+                getEl('modal-thumbnail').src = thumbnailUrl;
+                getEl('modal-thumbnail').alt = item.title;
+
+
+                // Links
+                const linksContainer = getEl('modal-links');
+                if (item.links && item.links.length > 0) {
+                    item.links.forEach(link => {
+                        const linkElement = document.createElement('a');
+                        linkElement.href = link.url;
+                        linkElement.target = '_blank';
+                        linkElement.className = 'flex items-center p-3 bg-indigo-600 hover:bg-indigo-700 rounded-lg text-white font-semibold transition duration-150 transform hover:scale-[1.01] shadow-md';
+                        linkElement.innerHTML = `
+                            <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 14.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm1.5-4h-3V7.5h3v5z"/></svg>
+                            ${link.title}
+                        `;
+                        linksContainer.appendChild(linkElement);
+                    });
                 } else {
-                    discoverGrid.innerHTML = '<p class="text-gray-500 col-span-5 text-center">No similar items found for these tags.</p>';
+                    getEl('no-links-message').classList.remove('hidden');
                 }
 
             } catch (error) {
-                console.error('Error fetching similar content:', error);
-                discoverGrid.innerHTML = '<p class="text-red-500 col-span-5 text-center">Failed to load recommendations.</p>';
-            } finally {
-                discoverLoading.classList.add('hidden');
+                console.error("Error fetching content details:", error);
+                getEl('modal-title').textContent = 'Error';
+                getEl('modal-views').textContent = 'N/A';
             }
         }
 
+        /**
+         * Closes the content detail modal.
+         * @param {Event} event - Optional click event to check for outside click.
+         */
+        function closeModal(event) {
+            const modal = getEl('detail-modal');
+            const modalCard = getEl('detail-card');
+            
+            // Check if the click was on the backdrop, not the card itself
+            if (event && event.target !== modal) return;
+            
+            // Animate out
+            modalCard.classList.remove('scale-100', 'opacity-100');
+            modalCard.classList.add('scale-95', 'opacity-0');
+            
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                // Refresh main content list to potentially show updated view counts
+                fetchContent(currentSearchQuery);
+            }, 300);
+        }
 
-        // Universal Escape key listener for the modal
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                if (!document.getElementById('links-modal').classList.contains('hidden')) {
-                    closeLinksModal();
-                }
-            }
-        });
-        
-        // Close modal on outside click
-        document.getElementById('links-modal').addEventListener('click', (e) => {
-            if (e.target.id === 'links-modal') closeLinksModal();
-        });
+        /**
+         * Shows the request content modal.
+         */
+        function showRequestModal() {
+            const modal = getEl('request-modal');
+            const modalCard = modal.querySelector('div');
+            
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            // Animate in
+            setTimeout(() => {
+                modalCard.classList.remove('scale-95', 'opacity-0');
+                modalCard.classList.add('scale-100', 'opacity-100');
+            }, 10);
+        }
 
-        // Load content on page load
-        fetchContent();
+        /**
+         * Closes the request content modal.
+         * @param {Event} event - Optional click event to check for outside click.
+         */
+        function closeRequestModal(event) {
+            const modal = getEl('request-modal');
+            const modalCard = modal.querySelector('div');
+
+            // Check if the click was on the backdrop, not the card itself
+            if (event && event.target !== modal) return;
+
+            // Animate out
+            modalCard.classList.remove('scale-100', 'opacity-100');
+            modalCard.classList.add('scale-95', 'opacity-0');
+            
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }, 300);
+        }
+
+
+        // Initialize the app on load
+        window.onload = () => {
+            fetchContent();
+        };
+
     </script>
 </body>
 </html>
