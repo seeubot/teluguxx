@@ -403,9 +403,7 @@ def index():
     """Simple status check since the frontend is now served by Vercel."""
     return jsonify({
         "service": "StreamHub API/Bot", 
-        "status": "online", 
-        "message": "API is running. Frontend expected at Vercel deployment.",
-        "api_endpoints": ["/api/content", "/api/content/similar/<tags>"]
+        "status": "online"
     }), 200
 
 @app.route('/health', methods=['GET'])
