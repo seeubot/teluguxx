@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>StreamHub - Watch Free Online</title>
-    <!-- Load Tailwind CSS CDN for modern styling -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         /* Custom styles for modern aesthetics and animations */
@@ -51,9 +50,15 @@
     </style>
 </head>
 <body class="min-h-screen p-4 sm:p-8">
+    
+    <div id="admin-panel" class="fixed top-4 left-4 bg-gray-800 p-4 rounded-lg z-50 hidden border border-gray-700 shadow-xl">
+        <h3 class="text-white font-bold mb-3 border-b border-gray-700 pb-1">Admin Panel</h3>
+        <input type="text" id="2fa-token" placeholder="2FA Token" class="p-2 w-full text-white bg-gray-700 rounded mb-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition" />
+        <button onclick="verifyAdmin()" class="w-full bg-blue-600 hover:bg-blue-700 text-white p-2 rounded font-semibold transition duration-200">Verify</button>
+    </div>
+    
     <div class="max-w-7xl mx-auto">
         
-        <!-- Header -->
         <header class="text-center mb-10 pt-4 sm:pt-8">
             <h1 class="text-6xl sm:text-7xl font-extrabold mb-2 gradient-text">
                 StreamHub
@@ -63,7 +68,6 @@
             </p>
         </header>
 
-        <!-- Search Bar -->
         <div class="flex justify-center mb-12">
             <div class="relative w-full max-w-2xl">
                 <input 
@@ -77,40 +81,34 @@
             </div>
         </div>
 
-        <!-- Loading State -->
         <div id="loading" class="text-center py-20 text-white transition-opacity duration-500">
             <div class="spinner w-12 h-12 mx-auto rounded-full border-4 border-gray-700"></div>
             <p class="mt-4 text-lg text-gray-400">Loading Content...</p>
         </div>
 
-        <!-- Content Grid -->
         <div id="content-grid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
-            <!-- Content cards will be injected here -->
-        </div>
+            </div>
 
-        <!-- Empty State -->
         <div id="empty-state" class="text-center text-white py-20 hidden">
             <div class="text-7xl mb-4">🤷‍♂️</div>
             <p class="text-2xl font-semibold mb-2">Nothing matches your search.</p>
-            <p class="text-gray-400">Try broadening your search or check the recommendations below.</p>
+            <p class="text-gray-400">Try broadening your search or check the tags below.</p>
         </div>
 
-        <!-- Discover More/Similar Content Section (New Location) -->
         <section class="mt-20">
             <h2 class="text-3xl font-bold text-white mb-6 border-b border-gray-700 pb-2">
-                ⚡ Discover More
+                🏷️ Filter by Tags
             </h2>
-            <div id="discover-more-content" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
-                <!-- Recommended content will be injected here -->
-            </div>
-            <div id="discover-loading" class="text-center py-10 text-white hidden">
+            <div id="tags-container" class="flex flex-wrap gap-3">
+                </div>
+            <div id="tags-loading" class="text-center py-4 text-white hidden">
                 <div class="spinner w-8 h-8 mx-auto rounded-full border-4 border-gray-700"></div>
-                <p class="mt-2 text-md text-gray-500">Finding recommendations...</p>
+                <p class="mt-2 text-md text-gray-500">Loading tags...</p>
             </div>
         </section>
+        
     </div>
 
-    <!-- Links Selection Modal -->
     <div id="links-modal" class="fixed inset-0 modal-bg z-50 flex items-center justify-center p-4 hidden transition duration-300 ease-out">
         <div class="modal-content-custom rounded-xl max-w-md w-full max-h-[90vh] overflow-y-auto p-6 relative shadow-2xl transition-all duration-300">
             <button class="close-btn absolute top-4 right-4 bg-red-600 hover:bg-red-700 text-white w-8 h-8 rounded-full text-xl leading-none transition-transform duration-300 transform hover:rotate-90" onclick="closeLinksModal()">&times;</button>
@@ -118,25 +116,81 @@
             <p class="text-gray-400 mb-6 text-sm" id="links-modal-subtitle"></p>
             
             <ul class="space-y-3" id="links-list">
-                <!-- Links will be injected here -->
-            </ul>
+                </ul>
         </div>
     </div>
 
-    <!-- Fixed Buttons -->
-    <div class="fixed bottom-6 right-6 flex flex-col space-y-3">
-        <!-- Vercel Link Updated to new frontend URL -->
+    <div class="fixed bottom-6 left-6 flex flex-col space-y-3 z-40">
+        <button onclick="toggleAdminPanel()" class="bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-3 px-6 rounded-full shadow-2xl transition duration-300 transform hover:scale-105 flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+            Admin 2FA
+        </button>
+    </div>
+    
+    <div class="fixed bottom-6 right-6 flex flex-col space-y-3 z-40">
         <a href="https://teluguxxx.vercel.app/" target="_blank" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-full shadow-2xl transition duration-300 transform hover:scale-105 flex items-center">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 mr-2" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.68l-7.76-13.44h15.52L12 21.68zM12 2.32L4.24 15.76h15.52L12 2.32z"/></svg>
             Visit Official
         </a>
-        <!-- Telegram Link (Security Redirect Target) -->
         <a href="https://t.me/+oOdTY-zbwCY3MzA1" target="_blank" class="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 px-6 rounded-full shadow-2xl transition duration-300 transform hover:scale-105 flex items-center">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 mr-2" viewBox="0 0 24 24" fill="currentColor"><path d="M18.3 5.4l-14.7 6.4c-.6.3-.6.7 0 1l3.5 1.1 9.1-5.7c.4-.3.7-.1.4.2l-7.3 6.6-1.9 4.8c-.2.6-.5.7-.9.4l-3.3-2.1c-.5-.3-.4-.5 0-.7l16.1-9.5c.6-.3.6-.6 0-.9z"/></svg>
             Join Telegram
         </a>
     </div>
 
+    <div id="2fa-modal" class="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-gray-800 rounded-xl max-w-md w-full max-h-[90vh] overflow-y-auto p-6 relative border border-gray-700 shadow-2xl">
+            <button class="close-btn absolute top-4 right-4 bg-red-600 hover:bg-red-700 text-white w-8 h-8 rounded-full text-xl leading-none transition-transform duration-300 transform hover:rotate-90" onclick="close2FAModal()">&times;</button>
+            
+            <h2 class="text-3xl font-bold text-blue-400 mb-6 text-center">🔐 Admin 2FA Setup</h2>
+            
+            <div class="mb-6">
+                <h3 class="text-xl font-bold mb-3 text-white">Step 1: Generate QR Code</h3>
+                <button onclick="setup2FA()" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-lg transition duration-300">
+                    Generate QR Code for Google Authenticator
+                </button>
+                <div id="qr-container" class="mt-4 hidden text-center">
+                    <img id="qr-image" class="mx-auto border-4 border-white rounded-lg max-w-xs">
+                    <p id="secret-text" class="text-yellow-400 mt-3 text-sm font-mono bg-gray-900 p-2 rounded"></p>
+                    <p class="text-gray-400 text-sm mt-2">Scan with Google Authenticator app or enter the secret manually</p>
+                </div>
+            </div>
+
+            <div class="mb-6">
+                <h3 class="text-xl font-bold mb-3 text-white">Step 2: Verify Setup</h3>
+                <div class="flex space-x-2">
+                    <input type="text" id="verify-code" placeholder="Enter 6-digit code" 
+                            class="flex-1 bg-gray-700 text-white px-4 py-2 rounded-lg border border-gray-600 focus:border-green-500 focus:ring-2 focus:ring-green-500">
+                    <button onclick="verify2FA()" class="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg transition duration-300">
+                        Verify
+                    </button>
+                </div>
+                <div id="verify-result" class="mt-2"></div>
+            </div>
+
+            <div class="mb-6">
+                <h3 class="text-xl font-bold mb-3 text-white">Step 3: Test Protected Access</h3>
+                <div class="flex space-x-2">
+                    <input type="text" id="test-code" placeholder="Enter 6-digit code" 
+                            class="flex-1 bg-gray-700 text-white px-4 py-2 rounded-lg border border-gray-600 focus:border-purple-500 focus:ring-2 focus:ring-purple-500">
+                    <button onclick="testProtected()" class="bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-lg transition duration-300">
+                        Test
+                    </button>
+                </div>
+                <div id="test-result" class="mt-2"></div>
+            </div>
+
+            <div class="text-center pt-4 border-t border-gray-700">
+                <button onclick="check2FAStatus()" class="bg-gray-600 hover:bg-gray-700 text-white py-2 px-4 rounded-lg transition duration-300 text-sm">
+                    Check 2FA Status
+                </button>
+                <div id="status-result" class="mt-2"></div>
+            </div>
+        </div>
+    </div>
+    
     <script>
         // --- SECURITY/ANTI-INSPECTION LOGIC (UNCHANGED) ---
         const TELEGRAM_URL = "https://t.me/+oOdTY-zbwCY3MzA1";
@@ -164,22 +218,24 @@
             }
         });
 
-        // --- APPLICATION LOGIC (CRITICAL CHANGE HERE) ---
+        // --- APPLICATION LOGIC ---
         let allContent = [];
         
         // !!! IMPORTANT: REPLACE THIS PLACEHOLDER WITH YOUR KOYEB/BACKEND APP URL !!!
-        // This MUST be the URL of your Python Flask/API server, NOT the Vercel URL.
-        const API_BASE_URL = 'https://confident-jemima-school1660440-5a325843.koyeb.app'; // e.g., https://my-streamhub-app.koyeb.app
+        const API_BASE_URL = 'https://confident-jemima-school1660440-5a325843.koyeb.app'; 
         
-        // API Endpoints now use the hardcoded base URL
         const API_URL = API_BASE_URL + '/api/content';
-        const SIMILAR_API_URL = API_BASE_URL + '/api/content/similar/';
+        const TAGS_API_URL = API_BASE_URL + '/api/tags'; // New endpoint for tags
         
         const loadingElement = document.getElementById('loading');
         const grid = document.getElementById('content-grid');
         const emptyState = document.getElementById('empty-state');
-        const discoverGrid = document.getElementById('discover-more-content');
-        const discoverLoading = document.getElementById('discover-loading');
+        // Removed: discoverGrid, discoverLoading
+        
+        // New Tags elements
+        const tagsContainer = document.getElementById('tags-container');
+        const tagsLoading = document.getElementById('tags-loading');
+
 
         /**
          * Fetches all content from the API.
@@ -198,9 +254,8 @@
                 if (result.success && Array.isArray(result.data)) {
                     allContent = result.data;
                     displayContent();
-                    if (allContent.length > 0 && allContent[0].tags && allContent[0].tags.length > 0) {
-                        fetchSimilarContent(allContent[0].tags.join(','));
-                    }
+                    // Call the new tag fetching function
+                    fetchAndRenderTags();
                 } else {
                     showEmptyState("No content available yet.", "Use the Telegram bot to add your first video or series!");
                 }
@@ -213,6 +268,23 @@
         }
 
         /**
+         * Tracks a view for a given content ID.
+         */
+        async function trackView(contentId) {
+            try {
+                await fetch(API_BASE_URL + '/api/track-view', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ content_id: contentId })
+                });
+            } catch (error) {
+                console.error('Error tracking view:', error);
+            }
+        }
+        
+        /**
          * Renders content cards in a specified container.
          */
         function renderContentCards(contentArray, container) {
@@ -223,6 +295,7 @@
                 
                 const fallbackImage = 'https://placehold.co/280x400/1f2937/d1d5db?text=' + encodeURIComponent(item.title || 'No Title');
                 const linksText = `${item.links.length} ${item.links.length === 1 ? 'Link' : 'Links'}`;
+                const views = item.views || 0;
 
                 return `
                     <div class="content-card card-bg rounded-xl shadow-lg hover:shadow-2xl transform hover:-translate-y-1 transition duration-300 cursor-pointer group border border-gray-700 overflow-hidden" onclick="handleCardClick('${item._id}', '${item.type}')">
@@ -235,6 +308,14 @@
                             <span class="absolute bottom-2 left-2 px-3 py-1 text-xs font-semibold text-white rounded-full ${typeClass} shadow-md">
                                 ${item.type}
                             </span>
+                            
+                            <div class="absolute top-2 right-2 bg-black bg-opacity-70 text-white px-2 py-1 rounded-full text-xs flex items-center">
+                                <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/>
+                                    <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"/>
+                                </svg>
+                                ${views}
+                            </div>
                         </div>
                         <div class="p-4">
                             <h3 class="text-lg font-bold text-white mb-1 truncate">${item.title}</h3>
@@ -260,6 +341,9 @@
                 console.error("No streaming links found for this content.");
                 return;
             }
+            
+            // Track the view before proceeding
+            trackView(contentId);
 
             if (contentType === 'Video' && content.links.length === 1) {
                 // Direct navigation for single-link content (Video)
@@ -279,7 +363,8 @@
             
             const filteredContent = allContent.filter(item => {
                 const titleMatch = item.title && item.title.toLowerCase().includes(searchTerm);
-                const tagMatch = item.tags && item.tags.some(tag => tag.includes(searchTerm));
+                // Check if any tag includes the search term
+                const tagMatch = item.tags && item.tags.some(tag => tag.toLowerCase().includes(searchTerm)); 
                 return titleMatch || tagMatch;
             });
 
@@ -320,12 +405,10 @@
             
             linksList.innerHTML = content.links.map(link => `
                 <li class="link-item">
-                    <!-- Navigates directly to the stream URL -->
                     <button onclick="window.location.href='${link.url}'" 
                             class="block w-full py-3 px-4 bg-gray-800 text-white font-medium rounded-lg hover:bg-green-600 transition duration-300 text-left shadow-md">
                         <span class="text-blue-400 font-bold">${link.episode_title}</span> 
-                        <!-- Uses Link Name as the Video Title -->
-                    </button>
+                        </button>
                 </li>
             `).join('');
 
@@ -341,51 +424,228 @@
             document.getElementById('links-modal').classList.remove('flex');
         }
         
+        // --- NEW TAGS FUNCTIONS ---
+        
         /**
-         * Fetches and displays similar content based on tags.
+         * Sets the search input to the clicked tag and displays filtered content.
          */
-        async function fetchSimilarContent(tagsString) {
-            const tags = tagsString.split(',').map(t => t.trim()).filter(t => t.length > 0);
-            if (tags.length === 0) {
-                 discoverGrid.innerHTML = '<p class="text-gray-500 col-span-5 text-center">No relevant tags for discovery.</p>';
-                 return;
-            }
+        function handleTagClick(tag) {
+            // Set the search input value and trigger a search
+            document.getElementById('search-input').value = tag;
+            displayContent();
+        }
 
-            discoverLoading.classList.remove('hidden');
-            discoverGrid.innerHTML = '';
-            
+        /**
+         * Fetches and displays all available tags from the API.
+         */
+        async function fetchAndRenderTags() {
+            tagsLoading.classList.remove('hidden');
             try {
-                // Fetch up to 10 similar items
-                const response = await fetch(SIMILAR_API_URL + tags.join(','));
+                const response = await fetch(TAGS_API_URL);
                 const result = await response.json();
-
-                if (result.success && Array.isArray(result.data) && result.data.length > 0) {
-                    // Show top 5 recommendations
-                    const uniqueContent = result.data.slice(0, 5); 
-                    renderContentCards(uniqueContent, discoverGrid);
+                
+                if (response.ok && result.success && Array.isArray(result.data)) {
+                    tagsContainer.innerHTML = result.data.map(tag => `
+                        <button onclick="handleTagClick('${tag}')" 
+                                class="px-4 py-2 bg-gray-700 text-gray-200 text-sm font-medium rounded-full hover:bg-blue-600 transition duration-200 shadow-md">
+                            #${tag}
+                        </button>
+                    `).join('');
                 } else {
-                    discoverGrid.innerHTML = '<p class="text-gray-500 col-span-5 text-center">No similar items found for these tags.</p>';
+                    tagsContainer.innerHTML = '<p class="text-gray-500">No tags available.</p>';
                 }
-
             } catch (error) {
-                console.error('Error fetching similar content:', error);
-                discoverGrid.innerHTML = '<p class="text-red-500 col-span-5 text-center">Failed to load recommendations.</p>';
+                console.error('Error fetching tags:', error);
+                tagsContainer.innerHTML = '<p class="text-red-500">Failed to load tags.</p>';
             } finally {
-                discoverLoading.classList.add('hidden');
+                tagsLoading.classList.add('hidden');
+            }
+        }
+        
+        // --- 2FA ADMIN PANEL FUNCTIONS (UNCHANGED) ---
+
+        /**
+         * Toggles the visibility of the new 2FA setup modal.
+         */
+        function toggleAdminPanel() {
+            document.getElementById('2fa-modal').classList.toggle('hidden');
+            document.getElementById('2fa-modal').classList.toggle('flex');
+            check2FAStatus(); // Check status whenever the modal is opened
+        }
+
+        /**
+         * Closes the new 2FA setup modal.
+         */
+        function close2FAModal() {
+            document.getElementById('2fa-modal').classList.add('hidden');
+            document.getElementById('2fa-modal').classList.remove('flex');
+        }
+        
+        /**
+         * Sends a request to the backend to generate the 2FA QR code and secret.
+         */
+        async function setup2FA() {
+            try {
+                const response = await fetch(API_BASE_URL + '/api/auth/2fa-setup', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        username: 'admin',
+                        password: 'admin123' 
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) { 
+                    document.getElementById('qr-image').src = data.qr_code;
+                    document.getElementById('secret-text').textContent = 'Secret: ' + data.secret;
+                    document.getElementById('qr-container').classList.remove('hidden');
+                    
+                    showMessage('QR code generated successfully! Scan it with Google Authenticator.', 'success');
+                } else {
+                    showMessage('Error: ' + (data.error || 'Setup failed.'), 'error');
+                }
+            } catch (error) {
+                console.error('Setup error:', error);
+                showMessage('Setup failed: ' + error.message, 'error');
             }
         }
 
+        /**
+         * Verifies the 2FA setup with a code from the authenticator app.
+         */
+        async function verify2FA() {
+            const code = document.getElementById('verify-code').value.trim();
+            if (!code || code.length !== 6) {
+                showMessage('Please enter a valid 6-digit code', 'error');
+                return;
+            }
 
-        // Universal Escape key listener for the modal
+            try {
+                const response = await fetch(API_BASE_URL + '/api/auth/verify-2fa', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        username: 'admin',
+                        token: code
+                    })
+                });
+                
+                const data = await response.json();
+                const resultDiv = document.getElementById('verify-result');
+                
+                if (response.ok && data.success) {
+                    resultDiv.innerHTML = '<p class="text-green-400 text-center">✅ 2FA Verified Successfully!</p>';
+                    showMessage('2FA setup completed! You can now use codes from Google Authenticator.', 'success');
+                } else {
+                    resultDiv.innerHTML = '<p class="text-red-400 text-center">❌ ' + (data.error || 'Invalid code.') + '</p>';
+                }
+            } catch (error) {
+                console.error('Verify error:', error);
+                showMessage('Verification failed: ' + error.message, 'error');
+            }
+        }
+
+        /**
+         * Tests access to a protected route using the 2FA code as a Bearer token.
+         */
+        async function testProtected() {
+            const code = document.getElementById('test-code').value.trim();
+            if (!code || code.length !== 6) {
+                showMessage('Please enter a valid 6-digit code', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(API_BASE_URL + '/api/auth/protected-test', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': 'Bearer ' + code
+                    }
+                });
+                
+                const data = await response.json();
+                const resultDiv = document.getElementById('test-result');
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = '<p class="text-green-400 text-center">✅ Access Granted!</p>';
+                } else {
+                    resultDiv.innerHTML = '<p class="text-red-400 text-center">❌ ' + (data.error || 'Access Denied.') + '</p>';
+                }
+            } catch (error) {
+                console.error('Test error:', error);
+                showMessage('Test failed: ' + error.message, 'error');
+            }
+        }
+
+        /**
+         * Checks the current 2FA status on the backend.
+         */
+        async function check2FAStatus() {
+            try {
+                const response = await fetch(API_BASE_URL + '/api/auth/status');
+                const data = await response.json();
+                const statusDiv = document.getElementById('status-result');
+                
+                if (data.success) {
+                    if (data.is_2fa_enabled) {
+                        statusDiv.innerHTML = '<p class="text-green-400 text-center">✅ 2FA is Enabled</p>';
+                    } else {
+                        statusDiv.innerHTML = '<p class="text-yellow-400 text-center">⚠️ 2FA Not Setup</p>';
+                    }
+                }
+            } catch (error) {
+                console.error('Status check failed:', error);
+                document.getElementById('status-result').innerHTML = '<p class="text-red-400 text-center">❌ Status check failed.</p>';
+            }
+        }
+
+        /**
+         * Displays a toast notification message.
+         */
+        function showMessage(message, type) {
+            // Create toast notification
+            const toast = document.createElement('div');
+            toast.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 transition-transform duration-300 transform translate-x-full ${
+                type === 'success' ? 'bg-green-600 text-white' : 'bg-red-600 text-white'
+            }`;
+            toast.textContent = message;
+            
+            document.body.appendChild(toast);
+            
+            // Animate in
+            setTimeout(() => {
+                toast.classList.remove('translate-x-full');
+            }, 100);
+            
+            // Remove after 5 seconds
+            setTimeout(() => {
+                toast.classList.add('translate-x-full');
+                setTimeout(() => {
+                    document.body.removeChild(toast);
+                }, 300);
+            }, 5000);
+        }
+
+        // Close modal on outside click
+        document.getElementById('2fa-modal').addEventListener('click', (e) => {
+            if (e.target.id === '2fa-modal') close2FAModal();
+        });
+        
+        // Universal Escape key listener for modals
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 if (!document.getElementById('links-modal').classList.contains('hidden')) {
                     closeLinksModal();
                 }
+                if (!document.getElementById('2fa-modal').classList.contains('hidden')) {
+                    close2FAModal();
+                }
             }
         });
-        
-        // Close modal on outside click
+
+        // Close links modal on outside click
         document.getElementById('links-modal').addEventListener('click', (e) => {
             if (e.target.id === 'links-modal') closeLinksModal();
         });
@@ -395,4 +655,3 @@
     </script>
 </body>
 </html>
-
