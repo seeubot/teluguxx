@@ -33,6 +33,26 @@ window.requestContent = () => {
 };
 
 /**
+ * Toggles the visibility of the search bar.
+ * Added to window scope.
+ */
+window.toggleSearchBar = () => {
+    const searchContainer = document.getElementById('search-container');
+    const searchInput = document.getElementById('search-input');
+    
+    // Toggle the 'active' class to apply transition effects
+    searchContainer.classList.toggle('active');
+
+    // If active, focus the input field for immediate use
+    if (searchContainer.classList.contains('active')) {
+        searchInput.focus();
+    } else {
+        // Clear search on close for simplicity, if desired
+        searchInput.value = '';
+    }
+};
+
+/**
  * Creates the HTML element for a single content card.
  * @param {object} content 
  * @returns {HTMLElement}
@@ -68,7 +88,6 @@ const createContentCard = (content) => {
                 </div>
             </div>
         `;
-        // Disable direct card click for series to force link use
         card.style.cursor = 'default';
 
     } else if (content.links && content.links.length > 0) {
@@ -143,7 +162,6 @@ window.loadContent = async (page = 1) => {
 
     try {
         const response = await fetch(url);
-        // Throw an error if the response status is bad
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -174,7 +192,8 @@ window.loadContent = async (page = 1) => {
         }
     } catch (error) {
         console.error("Fetch Error:", error);
-        grid.innerHTML = '<p class="status-message" style="color: var(--warning-color);">🚨 Failed to connect to the StreamHub API.</p>';
+        const warningColor = getComputedStyle(document.documentElement).getPropertyValue('--warning-color');
+        grid.innerHTML = `<p class="status-message" style="color: ${warningColor};">🚨 Failed to connect to the StreamHub API.</p>`;
     }
 };
 
