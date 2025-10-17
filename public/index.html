@@ -332,7 +332,7 @@
                 type="text" 
                 id="search-input" 
                 placeholder="Search by tag or title..." 
-                onkeydown="if(event.key === 'Enter') loadContent(1)"
+                onkeyup="if(event.key === 'Enter') loadContent(1)"
             >
             <button id="search-button" onclick="loadContent(1)">Search</button>
         </div>
