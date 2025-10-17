@@ -47,8 +47,12 @@ window.toggleSearchBar = () => {
     if (searchContainer.classList.contains('active')) {
         searchInput.focus();
     } else {
-        // Clear search on close for simplicity, if desired
+        // Clear search on close to reset the filter
         searchInput.value = '';
+        // If closing the bar and there was a search term, reload content
+        if (currentPage !== 1) {
+             loadContent(1);
+        }
     }
 };
 
@@ -62,15 +66,18 @@ const createContentCard = (content) => {
     card.className = 'content-card';
     card.setAttribute('data-id', content._id);
 
+    // Limit tags shown on the card to the first 3 for cleanliness
     const tagsHtml = content.tags.slice(0, 3).map(tag => `<span>${tag}</span>`).join('');
     const date = content.created_at ? new Date(content.created_at).toLocaleDateString() : 'N/A';
     const views = content.views !== undefined ? content.views.toLocaleString() : 'N/A';
     
+    // Check if content is a series (case-insensitive)
     const isSeries = content.type && content.type.toLowerCase().includes('series');
     
     let actionAreaHtml = '';
 
     if (isSeries && content.links && content.links.length > 0) {
+        // --- Series Link Logic ---
         // Generate the grid of episode links
         const episodeLinks = content.links.map(link => `
             <a href="${link.url}" target="_blank" class="episode-link" 
@@ -88,10 +95,12 @@ const createContentCard = (content) => {
                 </div>
             </div>
         `;
+        // Series cards shouldn't have a click action on the whole card
         card.style.cursor = 'default';
 
     } else if (content.links && content.links.length > 0) {
-        // Single video: Show a prominent "Watch Now" button
+        // --- Single Video/Main Link Logic ---
+        // Show a prominent "Watch Now" button (using the first link)
         actionAreaHtml = `
             <div class="action-button">
                 <span class="watch-btn" onclick="event.stopPropagation(); window.open('${content.links[0].url}', '_blank'); trackView('${content._id}');">
@@ -99,12 +108,14 @@ const createContentCard = (content) => {
                 </span>
             </div>
         `;
+         // Make the entire card clickable for single-link content
          card.onclick = () => {
             window.trackView(content._id);
             window.open(content.links[0].url, '_blank');
          };
 
     } else {
+        // --- No Links Logic ---
         // No links available: Request content action
         actionAreaHtml = `
             <div class="action-button">
@@ -113,6 +124,7 @@ const createContentCard = (content) => {
                 </span>
             </div>
         `;
+        // Make the entire card clickable to request content
         card.onclick = () => { window.requestContent(); };
     }
 
@@ -156,8 +168,11 @@ window.loadContent = async (page = 1) => {
     pageInfo.textContent = '';
 
     let url = `${CONTENT_ENDPOINT}?page=${page}&limit=${ITEMS_PER_PAGE}`;
+    
+    // --- FLEXIBILITY FIX: Use generic 'q' (query) parameter for search ---
     if (searchQuery) {
-        url += `&tag=${encodeURIComponent(searchQuery)}`; 
+        // Backend must be configured to check both title and tags for 'q'
+        url += `&q=${encodeURIComponent(searchQuery)}`; 
     }
 
     try {
@@ -167,7 +182,7 @@ window.loadContent = async (page = 1) => {
         }
         const data = await response.json();
 
-        if (data.success && data.data) {
+        if (data.success && data.data && data.data.length > 0) {
             grid.innerHTML = '';
             data.data.forEach(content => {
                 grid.appendChild(createContentCard(content));
@@ -189,6 +204,9 @@ window.loadContent = async (page = 1) => {
 
             grid.innerHTML = `<p class="status-message">${message}</p>`;
             pageInfo.textContent = 'Page 0 of 0';
+            
+            // Ensure totalPages is 0 if there are no results
+            totalPages = 0; 
         }
     } catch (error) {
         console.error("Fetch Error:", error);
