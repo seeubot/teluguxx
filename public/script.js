@@ -1,5 +1,5 @@
 // --- Configuration ---
-const API_BASE_URL = 'https://confident-jemima-school1660440-5a325843.koyeb.app'; 
+const API_BASE_URL = 'https://confident-jemima-school1660440-5a325843.koyeb.app';
 const CONTENT_ENDPOINT = `${API_BASE_URL}/api/content`;
 const TRACK_VIEW_ENDPOINT = `${API_BASE_URL}/api/track-view`;
 const TELEGRAM_LINK = 'https://t.me/+oOdTY-zbwCY3MzA1';
@@ -7,7 +7,7 @@ const ITEMS_PER_PAGE = 20;
 
 // --- Global State ---
 let currentPage = 1;
-let totalPages = 1;
+let totalPages = 0; // Initialize to 0
 
 // --- Utility Functions ---
 
@@ -50,6 +50,7 @@ window.toggleSearchBar = () => {
         // Clear search on close to reset the filter
         searchInput.value = '';
         // If closing the bar and there was a search term, reload content
+        // Only reload if not already on page 1 (since closing the search bar should conceptually reset/refresh)
         if (currentPage !== 1) {
              loadContent(1);
         }
@@ -71,35 +72,42 @@ const createContentCard = (content) => {
     const date = content.created_at ? new Date(content.created_at).toLocaleDateString() : 'N/A';
     const views = content.views !== undefined ? content.views.toLocaleString() : 'N/A';
     
-    // Check if content is a series (case-insensitive)
-    const isSeries = content.type && content.type.toLowerCase().includes('series');
+    // NEW LOGIC: Use multi-link format if there is more than 1 link.
+    const isMultiLink = content.links && content.links.length > 1;
     
     let actionAreaHtml = '';
 
-    if (isSeries && content.links && content.links.length > 0) {
-        // --- Series Link Logic ---
-        // Generate the grid of episode links
-        const episodeLinks = content.links.map(link => `
-            <a href="${link.url}" target="_blank" class="episode-link" 
-               onclick="event.stopPropagation(); trackView('${content._id}');"
-               title="${link.episode_title || 'Episode Link'}">
-                ${link.episode_title || 'Episode Link'}
-            </a>
-        `).join('');
+    if (isMultiLink) {
+        // --- Multi-Link / Series Link Logic ---
+        // Applies to series AND any video with multiple links (mirrors)
+        
+        // Use "Link X" if episode_title is missing for non-series content
+        const episodeLinks = content.links.map((link, index) => {
+            const linkTitle = link.episode_title || `Link ${index + 1}`;
+            return `
+                <a href="${link.url}" target="_blank" class="episode-link" 
+                   onclick="event.stopPropagation(); trackView('${content._id}');"
+                   title="${linkTitle}">
+                    ${linkTitle}
+                </a>
+            `;
+        }).join('');
+
+        const linkTypeName = content.type && content.type.toLowerCase().includes('series') ? 'Episodes' : 'Mirrors';
 
         actionAreaHtml = `
             <div class="episodes-list-container">
-                <p style="color: var(--primary-color); font-size: 0.95em; margin: 0 0 10px 0; font-weight: 600;">Episodes (${content.links.length})</p>
+                <p style="color: var(--primary-color); font-size: 0.95em; margin: 0 0 10px 0; font-weight: 600;">${linkTypeName} (${content.links.length})</p>
                 <div class="episodes-grid">
                     ${episodeLinks}
                 </div>
             </div>
         `;
-        // Series cards shouldn't have a click action on the whole card
+        // Multi-link/Series cards shouldn't have a click action on the whole card
         card.style.cursor = 'default';
 
-    } else if (content.links && content.links.length > 0) {
-        // --- Single Video/Main Link Logic ---
+    } else if (content.links && content.links.length === 1) {
+        // --- Single Video/Main Link Logic (Only 1 link) ---
         // Show a prominent "Watch Now" button (using the first link)
         actionAreaHtml = `
             <div class="action-button">
@@ -169,9 +177,8 @@ window.loadContent = async (page = 1) => {
 
     let url = `${CONTENT_ENDPOINT}?page=${page}&limit=${ITEMS_PER_PAGE}`;
     
-    // --- FLEXIBILITY FIX: Use generic 'q' (query) parameter for search ---
+    // Use generic 'q' (query) parameter for search
     if (searchQuery) {
-        // Backend must be configured to check both title and tags for 'q'
         url += `&q=${encodeURIComponent(searchQuery)}`; 
     }
 
