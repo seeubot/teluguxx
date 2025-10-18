@@ -106,7 +106,6 @@
             filter: brightness(1.05);
         }
 
-
         .watch-btn {
             display: block;
             width: 100%;
@@ -264,6 +263,173 @@
         .modal-confirm {
             font-weight: 700;
         }
+
+        /* --- Enhanced Responsive Design --- */
+        
+        /* Mobile First Approach */
+        .container {
+            width: 100%;
+            max-width: 100%;
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
+
+        /* Main content grid - 2 columns on mobile */
+        #content-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            width: 100%;
+        }
+
+        /* Tablet - 3 columns */
+        @media (min-width: 768px) {
+            .container {
+                padding-left: 1.5rem;
+                padding-right: 1.5rem;
+            }
+            
+            #content-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 1.5rem;
+            }
+        }
+
+        /* Desktop - 4 columns */
+        @media (min-width: 1024px) {
+            .container {
+                padding-left: 2rem;
+                padding-right: 2rem;
+            }
+            
+            #content-grid {
+                grid-template-columns: repeat(4, 1fr);
+                gap: 2rem;
+            }
+        }
+
+        /* Large Desktop - 5 columns */
+        @media (min-width: 1280px) {
+            #content-grid {
+                grid-template-columns: repeat(5, 1fr);
+            }
+        }
+
+        /* Extra Small Mobile Devices */
+        @media (max-width: 360px) {
+            #content-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 0.75rem;
+            }
+            
+            .container {
+                padding-left: 0.75rem;
+                padding-right: 0.75rem;
+            }
+        }
+
+        /* Header responsive adjustments */
+        @media (max-width: 640px) {
+            header {
+                height: 4rem;
+                padding-left: 1rem;
+                padding-right: 1rem;
+            }
+            
+            header h1 {
+                font-size: 1.5rem;
+            }
+            
+            body {
+                padding-top: 5rem;
+            }
+            
+            #search-container.active {
+                max-width: 200px;
+            }
+        }
+
+        /* Card content responsive adjustments */
+        @media (max-width: 640px) {
+            .card-info {
+                padding: 1rem;
+            }
+            
+            .card-info h3 {
+                font-size: 0.9rem;
+                margin-bottom: 0.5rem;
+            }
+            
+            .card-info .text-sm {
+                font-size: 0.75rem;
+            }
+            
+            .views-count {
+                font-size: 0.9rem;
+            }
+            
+            .watch-btn {
+                padding: 8px 0;
+                font-size: 0.8rem;
+            }
+            
+            .tag-chip {
+                font-size: 0.7rem;
+                padding: 0.25rem 0.5rem;
+            }
+            
+            .episode-link-chip {
+                font-size: 0.7rem;
+                padding: 0.4rem 0.25rem;
+            }
+        }
+
+        /* Footer responsive adjustments */
+        @media (max-width: 640px) {
+            footer {
+                padding-top: 2rem;
+                padding-bottom: 2rem;
+            }
+            
+            .page-number-btn {
+                min-width: 35px;
+                height: 35px;
+                font-size: 0.8rem;
+            }
+            
+            #page-info {
+                font-size: 1rem;
+            }
+        }
+
+        /* Landscape mobile optimization */
+        @media (max-height: 500px) and (orientation: landscape) {
+            body {
+                padding-top: 5rem;
+            }
+            
+            header {
+                height: 4rem;
+            }
+            
+            #content-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 1rem;
+            }
+        }
+
+        /* Very large screens */
+        @media (min-width: 1536px) {
+            .container {
+                max-width: 1536px;
+                margin-left: auto;
+                margin-right: auto;
+            }
+            
+            #content-grid {
+                grid-template-columns: repeat(6, 1fr);
+            }
+        }
     </style>
 </head>
 <body class="antialiased">
@@ -309,14 +475,14 @@
     </header>
 
     <!-- Main Content Grid -->
-    <main class="container mx-auto px-4 py-10">
-        <div id="content-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+    <main class="container mx-auto px-4 py-6 md:py-10">
+        <div id="content-grid" class="w-full">
             <!-- Content Cards will be dynamically inserted here -->
         </div>
         
         <!-- Status/Error Message Container -->
-        <div id="status-container" class="text-center py-20" style="display: none;">
-            <p id="status-message" class="text-2xl font-semibold text-secondary-text animate-pulse"></p>
+        <div id="status-container" class="text-center py-10 md:py-20" style="display: none;">
+            <p id="status-message" class="text-lg md:text-2xl font-semibold text-secondary-text animate-pulse"></p>
         </div>
     </main>
 
@@ -368,7 +534,6 @@
     <button id="fab-scroll-top" onclick="window.scrollToTop()" class="btn-smooth" title="Scroll to Top">
         <i class="fas fa-arrow-up text-2xl"></i>
     </button>
-
 
     <!-- Custom Modal Structure -->
     <div id="custom-modal">
