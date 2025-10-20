@@ -420,3 +420,388 @@ window.loadSimilarContent = async (content, page = 1, clearExisting = false) => 
                     loadMoreButton.classList.add('hidden');
                 }
             } else {
+                if (clearExisting) {
+                    similarContentGrid.innerHTML = '<p class="col-span-full text-center text-secondary-text">No similar content found.</p>';
+                }
+                loadMoreButton.classList.add('hidden');
+            }
+        } else {
+            if (clearExisting) {
+                similarContentGrid.innerHTML = '<p class="col-span-full text-center text-secondary-text">No similar content found.</p>';
+            }
+            loadMoreButton.classList.add('hidden');
+        }
+    } catch (error) {
+        console.error("Error loading similar content:", error);
+        similarContentLoading.style.display = 'none';
+        if (clearExisting) {
+            similarContentGrid.innerHTML = '<p class="col-span-full text-center text-red-500">Failed to load similar content.</p>';
+        }
+        loadMoreButton.classList.add('hidden');
+    }
+};
+
+/**
+ * Loads more similar content when Load More button is clicked
+ */
+window.loadMoreSimilarContent = async () => {
+    if (!currentVideoContent || !hasMoreSimilarContent) return;
+    
+    loadMoreButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Loading...';
+    loadMoreButton.disabled = true;
+
+    similarContentPage++;
+    await window.loadSimilarContent(currentVideoContent, similarContentPage, false);
+    
+    loadMoreButton.innerHTML = '<i class="fas fa-plus-circle mr-2"></i> Load More Similar Content';
+    loadMoreButton.disabled = false;
+};
+
+/**
+ * Creates a card for similar content
+ */
+const createSimilarContentCard = (content) => {
+    const truncatedTitle = content.title.length > 50 
+        ? content.title.substring(0, 50).trim() + '...' 
+        : content.title;
+        
+    const views = content.views !== undefined && !isNaN(content.views) ? Number(content.views).toLocaleString() : '0';
+    const staticThumbnail = content.thumbnail_url || 'https://placehold.co/300x200/1f2937/4ade80?text=ADULT-HUB';
+    
+    const contentString = JSON.stringify(content).replace(/"/g, '&quot;');
+    
+    return `
+        <div class="similar-content-card" onclick="window.showVideoPlayer('${contentString}')">
+            <div class="similar-card-image-container relative">
+                <img class="similar-card-image" 
+                     src="${staticThumbnail}" 
+                     alt="${content.title}" 
+                     onerror="this.onerror=null; this.src='https://placehold.co/300x200/1f2937/4ade80?text=ADULT-HUB Placeholder'">
+            </div>
+            <div class="similar-card-info">
+                <h3 class="similar-card-title text-sm font-extrabold text-white mb-1" title="${content.title}">${truncatedTitle}</h3>
+                <div class="similar-card-meta text-xs text-secondary-text">
+                    <span class="flex items-center"><i class="fas fa-eye mr-1 text-primary-color"></i> ${views}</span>
+                    <span class="ml-2">${content.type ? content.type.toUpperCase() : 'UNKNOWN'}</span>
+                </div>
+            </div>
+        </div>
+    `;
+};
+
+// --- Core Application Logic ---
+
+/**
+ * Fetches data with exponential backoff retry mechanism.
+ */
+const fetchWithRetry = async (url, options, maxRetries = 3) => {
+    let lastError;
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+        try {
+            if (attempt > 0) {
+                const delay = Math.pow(2, attempt) * 1000;
+                await new Promise(resolve => setTimeout(resolve, delay));
+            }
+
+            const response = await fetch(url, options);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response;
+        } catch (error) {
+            lastError = error;
+        }
+    }
+    throw lastError;
+};
+
+/**
+ * Tracks a view for a given content item asynchronously.
+ */
+window.trackView = (contentId) => {
+    fetch(TRACK_VIEW_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content_id: contentId }),
+    }).catch(error => console.error("Failed to track view:", error));
+};
+
+/**
+ * Toggles the visibility of the search bar.
+ * @param {boolean} forceClose - If true, forces the search bar to close without toggling.
+ */
+window.toggleSearchBar = (forceClose = false) => {
+    
+    if (!searchContainer || !searchInput) return;
+
+    if (sideMenu.classList.contains('active')) {
+        window.toggleSideMenu(); // Close side menu if open
+    }
+
+    if (forceClose || searchContainer.classList.contains('active')) {
+        searchContainer.classList.remove('active');
+        searchContainer.style.top = `${header.offsetHeight}px`; // Reset for smooth closing transition
+        searchContainer.style.top = '-100px'; 
+        
+        // If search was active, but input is now empty, treat it as closing
+        const wasSearching = searchInput.value.trim() !== '';
+        if (!forceClose && !wasSearching && (wasSearching || currentFilterCategory)) {
+            currentFilterCategory = ''; 
+            window.loadContent(1); 
+            window.fetchCategories(); 
+        }
+        searchInput.value = '';
+    } else {
+        searchContainer.classList.add('active');
+        searchContainer.style.top = `${header.offsetHeight}px`; // Ensure it slides down right under header
+        searchInput.focus();
+    }
+};
+
+/**
+ * Fetches and renders unique content categories inside the side menu.
+ */
+window.fetchCategories = async () => {
+    if (!categoriesContainer) return;
+    
+    if (categoriesContainer.innerHTML.includes('No categories available') || categoriesContainer.innerHTML.includes('Failed to load categories') || categoriesContainer.innerHTML === '') {
+         categoriesContainer.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Loading categories...';
+    } 
+
+    try {
+        const response = await fetchWithRetry(CATEGORIES_ENDPOINT, {}, 2); 
+        const data = await response.json();
+
+        if (data.success && data.tags && data.tags.length > 0) {
+            
+            let categoriesHtml = `<span class="chip ${currentFilterCategory === '' ? 'active-category' : ''} px-3 py-1 rounded-full text-xs font-medium cursor-pointer btn-smooth" onclick="window.filterByCategory('')">All Content</span>`;
+            
+            categoriesHtml += data.tags.map(category => {
+                const isActive = category === currentFilterCategory ? 'active-category' : '';
+                return `<span class="chip ${isActive} px-3 py-1 rounded-full text-xs font-medium cursor-pointer btn-smooth" onclick="window.filterByCategory('${category}')">${category}</span>`;
+            }).join('');
+            
+            categoriesContainer.innerHTML = categoriesHtml;
+        } else {
+            categoriesContainer.innerHTML = '<span class="text-sm text-secondary-text">No categories available.</span>';
+        }
+    } catch (error) {
+        console.error("Category Fetch Error:", error);
+        categoriesContainer.innerHTML = '<span class="text-sm text-red-500">Failed to load categories.</span>';
+    }
+};
+
+/**
+ * Handles filtering content by clicking a category chip.
+ */
+window.filterByCategory = (category) => {
+    searchInput.value = ''; 
+    
+    currentFilterCategory = category; 
+    
+    window.loadContent(1);
+    window.fetchCategories(); // Re-render categories to ensure highlighting is correct
+    window.toggleSideMenu(); // Close the menu after selecting a category
+};
+
+/**
+ * Creates the HTML element for a single content card. 
+ */
+const createContentCard = (content) => {
+    const card = document.createElement('div');
+    card.className = 'content-card';
+    card.setAttribute('data-id', content._id);
+
+    const truncatedTitle = content.title.length > MAX_TITLE_LENGTH 
+        ? content.title.substring(0, MAX_TITLE_LENGTH).trim() + '...' 
+        : content.title;
+
+    const tagsHtml = (content.tags || []).slice(0, 3).map(tag => `<span class="chip px-2 py-1 rounded-full text-xs">${tag}</span>`).join('');
+    const date = content.created_at ? new Date(content.created_at).toLocaleDateString() : 'N/A';
+    const views = content.views !== undefined && !isNaN(content.views) ? Number(content.views).toLocaleString() : '0';
+    
+    const staticThumbnail = content.thumbnail_url || 'https://placehold.co/300x200/1f2937/4ade80?text=ADULT-HUB';
+    
+    const contentString = JSON.stringify(content).replace(/"/g, '&quot;');
+    
+    // MODIFICATION START: Updated action area for centering and full-width button on mobile
+    const actionAreaHtml = `
+        <div class="action-button mt-4 flex justify-center w-full">
+            <button class="watch-btn btn-smooth shadow-xl w-full sm:w-auto text-lg" onclick="event.stopPropagation(); window.showVideoPlayer('${contentString}')">
+                <i class="fas fa-play-circle mr-1"></i> Watch Now
+            </button>
+        </div>
+    `;
+    // MODIFICATION END: Updated action area for centering and full-width button on mobile
+
+    card.onclick = () => window.showVideoPlayer(contentString);
+
+    card.innerHTML = `
+        <div class="card-image-container relative">
+            <img class="card-image" 
+                    src="${staticThumbnail}" 
+                    alt="${content.title}" 
+                    onerror="this.onerror=null; this.src='https://placehold.co/300x200/1f2937/4ade80?text=ADULT-HUB Placeholder'}">
+        </div>
+        
+        <div class="card-info p-5 flex flex-col flex-grow">
+            <h3 class="text-xl font-extrabold mb-2" title="${content.title}">${truncatedTitle}</h3>
+            <div class="flex justify-between text-sm text-secondary-text mb-2">
+                <span class="font-semibold"><i class="fas fa-tag text-primary-color mr-1"></i> ${content.type ? content.type.toUpperCase() : 'UNKNOWN'}</span>
+                <span><i class="fas fa-calendar-alt text-primary-color mr-1"></i> ${date}</span>
+            </div>
+            <p class="flex items-center text-sm mb-2 text-secondary-text">
+                <i class="fas fa-eye text-primary-color mr-2"></i> 
+                Views: <strong class="views-count ml-1 text-white">${views}</strong>
+            </p>
+            ${actionAreaHtml}
+            <div class="mt-auto pt-4 border-t border-[#374151] flex flex-wrap gap-2">${tagsHtml}</div>
+        </div>
+    `;
+    
+    return card;
+};
+
+/**
+ * Creates and renders the clickable page number buttons.
+ */
+const renderPageNumbers = (totalPages, currentPage) => {
+    pageNumbersContainer.innerHTML = '';
+    
+    if (totalPages <= 1) {
+        pageInfo.textContent = `Page ${totalPages > 0 ? 1 : 0} of ${totalPages}`;
+        return;
+    }
+
+    const maxButtons = 9;
+    let startPage = 1;
+    let endPage = totalPages;
+
+    if (totalPages > maxButtons) {
+        const half = Math.floor(maxButtons / 2);
+        startPage = Math.max(1, currentPage - half + 1);
+        endPage = Math.min(totalPages, currentPage + half);
+
+        if (currentPage < half) {
+            endPage = maxButtons;
+        }
+        if (currentPage > totalPages - half) {
+            startPage = totalPages - maxButtons + 1;
+        }
+    }
+
+    startPage = Math.max(1, startPage);
+    endPage = Math.min(totalPages, endPage);
+
+    // Render "..." at start
+    if (startPage > 1) {
+        pageNumbersContainer.innerHTML += '<span class="text-xl text-primary-color px-2 py-1 select-none">...</span>';
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+        const button = document.createElement('button');
+        button.textContent = i;
+        button.className = `page-number-btn text-sm md:text-base btn-smooth ${i === currentPage ? 'active' : ''}`;
+        button.onclick = () => {
+            window.scrollToTop(); 
+            window.loadContent(i);
+        };
+        pageNumbersContainer.appendChild(button);
+    }
+    
+    // Render "..." at end
+    if (endPage < totalPages) {
+        pageNumbersContainer.innerHTML += '<span class="text-xl text-primary-color px-2 py-1 select-none">...</span>';
+    }
+    
+    pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+};
+
+/**
+ * Fetches and displays content based on current page and search query/category filter.
+ */
+window.loadContent = async (page = 1) => {
+    clearRetryTimers();
+    
+    if (isLoading) return; 
+
+    const pageToLoad = page < 1 ? 1 : page; 
+    
+    // Hide search bar if content is being loaded (or cleared)
+    if (searchContainer.classList.contains('active') && !searchInput.value.trim() && !currentFilterCategory) {
+        window.toggleSearchBar(true); 
+    }
+
+
+    // 1. Set Loading State
+    isLoading = true;
+    statusContainer.style.display = 'block';
+    statusMessage.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Fetching new content...';
+    
+    pageNumbersContainer.innerHTML = '';
+    pageInfo.textContent = '...';
+    grid.innerHTML = '';
+
+    let url = `${CONTENT_ENDPOINT}?page=${pageToLoad}&limit=${ITEMS_PER_PAGE}`;
+    
+    if (searchInput.value.trim()) {
+        url += `&q=${encodeURIComponent(searchInput.value.trim())}`; 
+        currentFilterCategory = ''; 
+    } else if (currentFilterCategory) {
+         url += `&tag=${encodeURIComponent(currentFilterCategory)}`;
+    }
+
+    try {
+        const response = await fetchWithRetry(url, {}, 3); 
+        const data = await response.json();
+
+        if (data.success && data.data && data.data.length > 0) {
+            
+            data.data.forEach(content => {
+                grid.appendChild(createContentCard(content));
+            });
+
+            currentPage = data.pagination.page;
+            totalPages = data.pagination.pages;
+            
+            renderPageNumbers(totalPages, currentPage);
+            statusContainer.style.display = 'none'; 
+
+        } else {
+            let message = '😢 No content is currently available.';
+            if (searchInput.value.trim()) {
+                message = `😢 No results found for "<strong class="text-primary-color">${searchInput.value.trim()}</strong>". Try simplifying your search.`;
+            } else if (currentFilterCategory) {
+                message = `😢 No content found in category: "<strong class="text-primary-color">${currentFilterCategory}</strong>".`;
+            }
+            
+            statusMessage.innerHTML = message;
+            pageInfo.textContent = 'Page 0 of 0';
+            pageNumbersContainer.innerHTML = '';
+            totalPages = 0; 
+        }
+    } catch (error) {
+        console.error("Content Load Error:", error);
+        
+        statusContainer.style.display = 'block';
+        let remainingTime = RETRY_DELAY_MS / 1000;
+        
+        statusMessage.innerHTML = `🚨 Failed to connect. Retrying in ${remainingTime}s...`;
+        
+        countdownInterval = setInterval(() => {
+            remainingTime--;
+            statusMessage.innerHTML = `🚨 Failed to connect. Retrying in ${remainingTime}s...`;
+            if (remainingTime <= 0) {
+                clearInterval(countdownInterval);
+            }
+        }, 1000);
+
+        retryTimeout = setTimeout(() => {
+            window.loadContent(pageToLoad); 
+        }, RETRY_DELAY_MS);
+        
+        pageInfo.textContent = 'Error';
+    } finally {
+        isLoading = false;
+    }
+};
