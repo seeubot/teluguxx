@@ -17,7 +17,7 @@ const TAGS_ENDPOINT = `${API_BASE_URL}/api/tags`;
 const ITEMS_PER_PAGE = 20;
 const RETRY_DELAY_MS = 5000; // 5 seconds retry delay
 const MAX_TITLE_LENGTH = 35; // Maximum characters for the display title
-const SIMILAR_CONTENT_LIMIT = 6; // Number of similar content items to show
+const SIMILAR_CONTENT_LIMIT = 6; // Number of similar content items to show per load
 
 // --- Global State ---
 let currentPage = 0; 
@@ -28,11 +28,14 @@ let isLoading = false;
 let retryTimeout = null; // To hold the timer for auto-refresh
 let countdownInterval = null; // To hold the interval for the countdown display
 let currentVideoContent = null; // Store the currently playing video content
+let similarContentPage = 1; // Track current page for similar content
+let hasMoreSimilarContent = true; // Track if more similar content is available
 
 // --- DOM Elements ---
 let header, grid, pageInfo, tagsContainer, searchInput, statusContainer, statusMessage;
 let fabScrollTop, pageNumbersContainer, mainContent, videoPlayerPage, videoPlayerTitle;
 let videoPlayerIframe, videoLinksContainer, similarContentGrid, similarContentLoading;
+let loadMoreButton, similarContentSection;
 
 // Initialize the application
 document.addEventListener('DOMContentLoaded', () => {
@@ -68,6 +71,15 @@ function initializeDOMElements() {
     videoLinksContainer = document.getElementById('video-links');
     similarContentGrid = document.getElementById('similar-content-grid');
     similarContentLoading = document.getElementById('similar-content-loading');
+    similarContentSection = document.getElementById('similar-content-section');
+    
+    // Create Load More button for similar content
+    loadMoreButton = document.createElement('button');
+    loadMoreButton.id = 'load-more-similar';
+    loadMoreButton.className = 'load-more-btn mt-6 mx-auto px-6 py-3 bg-primary-color text-white rounded-lg font-semibold btn-smooth hidden';
+    loadMoreButton.innerHTML = '<i class="fas fa-plus-circle mr-2"></i> Load More Similar Content';
+    loadMoreButton.onclick = () => window.loadMoreSimilarContent();
+    similarContentSection.appendChild(loadMoreButton);
 }
 
 /**
@@ -211,6 +223,10 @@ window.showVideoPlayer = (content) => {
     // Store current video content
     currentVideoContent = content;
     
+    // Reset similar content state
+    similarContentPage = 1;
+    hasMoreSimilarContent = true;
+    
     // Set title
     videoPlayerTitle.textContent = content.title;
     
@@ -241,7 +257,7 @@ window.showVideoPlayer = (content) => {
     videoPlayerPage.style.display = 'block';
     
     // Load similar content based on tags
-    window.loadSimilarContent(content);
+    window.loadSimilarContent(content, 1, true);
     
     // Scroll to top
     window.scrollToTop();
@@ -259,26 +275,31 @@ window.showMainPage = () => {
     videoPlayerTitle.textContent = '';
     videoLinksContainer.innerHTML = '';
     similarContentGrid.innerHTML = '';
+    loadMoreButton.classList.add('hidden');
     currentVideoContent = null;
 };
 
 /**
  * Loads similar content based on the tags of the current video
  */
-window.loadSimilarContent = async (content) => {
+window.loadSimilarContent = async (content, page = 1, clearExisting = false) => {
     if (!content.tags || content.tags.length === 0) {
         similarContentGrid.innerHTML = '<p class="text-center text-secondary-text">No tags available to find similar content.</p>';
+        loadMoreButton.classList.add('hidden');
         return;
     }
 
     // Show loading spinner
     similarContentLoading.style.display = 'flex';
-    similarContentGrid.innerHTML = '';
+    if (clearExisting) {
+        similarContentGrid.innerHTML = '';
+    }
+    loadMoreButton.classList.add('hidden');
 
     try {
         // Use the first tag to find similar content
         const tag = content.tags[0];
-        const url = `${CONTENT_ENDPOINT}?tag=${encodeURIComponent(tag)}&limit=${SIMILAR_CONTENT_LIMIT}`;
+        const url = `${CONTENT_ENDPOINT}?tag=${encodeURIComponent(tag)}&limit=${SIMILAR_CONTENT_LIMIT}&page=${page}`;
         
         const response = await fetchWithRetry(url, {}, 2);
         const data = await response.json();
@@ -291,18 +312,52 @@ window.loadSimilarContent = async (content) => {
             const similarContent = data.data.filter(item => item._id !== content._id);
             
             if (similarContent.length > 0) {
-                similarContentGrid.innerHTML = similarContent.map(item => createSimilarContentCard(item)).join('');
+                const similarContentHTML = similarContent.map(item => createSimilarContentCard(item)).join('');
+                
+                if (clearExisting) {
+                    similarContentGrid.innerHTML = similarContentHTML;
+                } else {
+                    similarContentGrid.innerHTML += similarContentHTML;
+                }
+                
+                // Show/hide load more button based on pagination
+                if (data.pagination && data.pagination.page < data.pagination.pages) {
+                    hasMoreSimilarContent = true;
+                    loadMoreButton.classList.remove('hidden');
+                } else {
+                    hasMoreSimilarContent = false;
+                    loadMoreButton.classList.add('hidden');
+                }
             } else {
-                similarContentGrid.innerHTML = '<p class="text-center text-secondary-text">No similar content found.</p>';
+                if (clearExisting) {
+                    similarContentGrid.innerHTML = '<p class="text-center text-secondary-text">No similar content found.</p>';
+                }
+                loadMoreButton.classList.add('hidden');
             }
         } else {
-            similarContentGrid.innerHTML = '<p class="text-center text-secondary-text">No similar content found.</p>';
+            if (clearExisting) {
+                similarContentGrid.innerHTML = '<p class="text-center text-secondary-text">No similar content found.</p>';
+            }
+            loadMoreButton.classList.add('hidden');
         }
     } catch (error) {
         console.error("Error loading similar content:", error);
         similarContentLoading.style.display = 'none';
-        similarContentGrid.innerHTML = '<p class="text-center text-secondary-text">Failed to load similar content.</p>';
+        if (clearExisting) {
+            similarContentGrid.innerHTML = '<p class="text-center text-secondary-text">Failed to load similar content.</p>';
+        }
+        loadMoreButton.classList.add('hidden');
     }
+};
+
+/**
+ * Loads more similar content when Load More button is clicked
+ */
+window.loadMoreSimilarContent = async () => {
+    if (!currentVideoContent || !hasMoreSimilarContent) return;
+    
+    similarContentPage++;
+    await window.loadSimilarContent(currentVideoContent, similarContentPage, false);
 };
 
 /**
