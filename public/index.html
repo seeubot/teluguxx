@@ -13,13 +13,15 @@
     
     <style>
         :root {
-            --primary-color: #4ade80; /* Mint Green */
-            --secondary-color: #22c55e; /* Deeper Green for hover */
-            --background-dark: #111827; /* Deep Slate Blue */
-            --card-dark: #1f2937; /* Slightly lighter Slate for Cards/Surfaces */
-            --text-primary: #f9fafb; /* Off-white */
-            --text-secondary: #9ca3af; /* Gray */
-            --dark-gray: #374151; /* Medium Slate */
+            /* NEW THEME: Neon Pink/Red on Deep Black */
+            --primary-color: #ff005c; /* Neon Pink/Red */
+            --secondary-color: #e0004f; /* Darker Pink for hover */
+            --background-dark: #0a0a0a; /* Deep Black */
+            --card-dark: #1a1a1a; /* Slightly lighter Black for Cards/Surfaces */
+            --text-primary: #f0f0f0; /* Off-white */
+            --text-secondary: #999999; /* Light Gray */
+            --dark-gray: #333333; /* Medium Gray for Borders */
+            --shadow-glow: 0 4px 15px rgba(255, 0, 92, 0.4); /* Pink Glow */
         }
 
         body {
@@ -42,16 +44,16 @@
             left: 0;
             right: 0;
             z-index: 50;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
-            background-color: rgba(17, 24, 39, 0.98); /* Less transparent background-dark */
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.6);
+            background-color: rgba(10, 10, 10, 0.98); /* Less transparent background-dark */
             backdrop-filter: blur(8px);
             -webkit-backdrop-filter: blur(8px);
         }
 
         /* Search Bar Animation */
         #search-container {
-            position: fixed; /* Use fixed to ensure it appears over content */
-            top: 64px; /* Height of the header */
+            position: fixed;
+            top: 64px;
             left: 0;
             right: 0;
             background-color: var(--card-dark);
@@ -60,7 +62,7 @@
             opacity: 0;
             pointer-events: none;
             transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.3s ease;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8);
             z-index: 40;
             border-bottom-left-radius: 12px;
             border-bottom-right-radius: 12px;
@@ -94,7 +96,7 @@
             height: 100%;
             width: 280px;
             background-color: var(--card-dark);
-            box-shadow: 4px 0 15px rgba(0, 0, 0, 0.6);
+            box-shadow: 4px 0 15px rgba(0, 0, 0, 0.8);
             transform: translateX(-100%);
             transition: transform 0.3s ease-in-out;
             z-index: 60;
@@ -112,7 +114,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.7);
+            background-color: rgba(0, 0, 0, 0.8);
             z-index: 55;
             display: none;
         }
@@ -124,7 +126,7 @@
             overflow: hidden;
             display: flex;
             flex-direction: column;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            box-shadow: var(--shadow-glow);
             border: 1px solid var(--dark-gray);
             transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
             cursor: pointer; 
@@ -133,7 +135,7 @@
         .content-card:hover {
             transform: translateY(-5px);
             border-color: var(--primary-color);
-            box-shadow: 0 8px 25px rgba(74, 222, 128, 0.2); /* Accent shadow */
+            box-shadow: 0 8px 30px rgba(255, 0, 92, 0.5); /* Stronger Accent shadow */
         }
 
         .card-image-container {
@@ -158,20 +160,13 @@
         
         /* Category/Tag Chip Styling */
         .chip {
-            background-color: rgba(74, 222, 128, 0.15); /* Primary color low opacity */
+            background-color: rgba(255, 0, 92, 0.15); /* Primary color low opacity */
             color: var(--primary-color);
             font-weight: 600;
         }
         
-        .chip.active-category {
-            background-color: var(--primary-color) !important;
-            color: var(--background-dark) !important;
-            box-shadow: 0 0 8px rgba(74, 222, 128, 0.5);
-        }
-        
         /* Primary Action Button */
         .watch-btn {
-            /* Now handled mostly by Tailwind classes in JS, keeping base styles */
             display: inline-block;
             background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
             color: var(--background-dark);
@@ -180,13 +175,13 @@
             font-weight: 800;
             cursor: pointer;
             text-align: center;
-            box-shadow: 0 5px 15px rgba(74, 222, 128, 0.4);
+            box-shadow: 0 5px 15px rgba(255, 0, 92, 0.6);
             border: none;
         }
 
         .watch-btn:hover {
-            background: linear-gradient(135deg, var(--secondary-color) 0%, #16a34a 100%);
-            box-shadow: 0 8px 25px rgba(74, 222, 128, 0.6);
+            background: linear-gradient(135deg, var(--secondary-color) 0%, #a8003f 100%);
+            box-shadow: 0 8px 25px rgba(255, 0, 92, 0.8);
         }
         
         /* Pagination Buttons */
@@ -202,10 +197,11 @@
             background-color: var(--primary-color);
             color: var(--background-dark);
             font-weight: 800;
+            box-shadow: 0 0 10px rgba(255, 0, 92, 0.5);
         }
         
         .page-number-btn:hover:not(.active) {
-            background-color: #4b5563; /* Slightly lighter dark gray */
+            background-color: #555555;
         }
 
         /* FAB Button */
@@ -220,7 +216,7 @@
              background-color: var(--secondary-color);
         }
         
-        /* Media Queries for Layout */
+        /* Media Queries for Layout (Cards switch to horizontal on small screens) */
         @media (min-width: 640px) {
             .content-card {
                 flex-direction: row;
@@ -239,10 +235,10 @@
         
         /* Similar Content Card Styling */
         .similar-content-card {
-            background-color: var(--background-dark);
+            background-color: var(--card-dark);
             border-radius: 12px;
             overflow: hidden;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
             cursor: pointer;
             transition: transform 0.2s ease;
             border: 1px solid var(--dark-gray);
@@ -272,15 +268,15 @@
             padding: 12px;
         }
         
-        /* MODIFICATION START: Responsive Video Player Styles */
+        /* Responsive Video Player Styles */
         .video-player-iframe-container {
             position: relative;
             width: 100%;
             padding-top: 56.25%; /* 16:9 Aspect Ratio (9/16 * 100) */
-            background-color: #000; /* Black background to hide borders */
+            background-color: #000;
             border-radius: 12px;
             overflow: hidden;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.7);
+            box-shadow: 0 5px 30px rgba(255, 0, 92, 0.3);
         }
 
         .video-player-iframe {
@@ -291,7 +287,6 @@
             height: 100%;
             border: none;
         }
-        /* MODIFICATION END: Responsive Video Player Styles */
         
         /* Modal Style */
         #custom-modal {
@@ -300,7 +295,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.85);
+            background-color: rgba(0, 0, 0, 0.9);
             display: none;
             align-items: center;
             justify-content: center;
@@ -312,7 +307,7 @@
             border-radius: 16px;
             max-width: 90%;
             width: 400px;
-            box-shadow: 0 10px 30px rgba(74, 222, 128, 0.2);
+            box-shadow: 0 10px 30px rgba(255, 0, 92, 0.3);
             transform: scale(0.9);
             opacity: 0;
             transition: transform 0.3s ease-out, opacity 0.3s ease-out;
@@ -321,7 +316,56 @@
             transform: scale(1);
             opacity: 1;
         }
-
+        
+        /* Gallery Modal Styles */
+        .gallery-image-wrapper {
+            position: relative;
+            padding-top: 75%; /* 4:3 ratio for images */
+            overflow: hidden;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+            transition: transform 0.3s ease;
+        }
+        .gallery-image-wrapper:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(255, 0, 92, 0.5);
+        }
+        .gallery-image-wrapper img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        /* Full Image Viewer Modal */
+        #image-viewer-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.95);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 130;
+        }
+        #image-viewer-modal .image-content {
+            max-width: 95%;
+            max-height: 95%;
+            position: relative;
+        }
+        #image-viewer-modal img {
+            max-width: 100%;
+            max-height: 100vh;
+            display: block;
+            border-radius: 12px;
+            box-shadow: 0 0 40px rgba(255, 0, 92, 0.5);
+        }
+        
     </style>
 </head>
 <body class="min-h-screen">
@@ -335,8 +379,9 @@
         <div class="flex space-x-3 md:space-x-4">
             
             <!-- Search Toggle Button -->
-            <button onclick="window.toggleSearchBar()" class="p-2 w-10 h-10 md:w-12 md:h-12 bg-dark-gray hover:bg-[#4b5563] rounded-xl flex items-center justify-center btn-smooth">
-                <i class="fas fa-search text-white"></i>
+            <button onclick="window.toggleSearchBar()" class="p-2 w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center btn-smooth"
+                    style="background-color: var(--dark-gray); color: var(--text-primary);">
+                <i class="fas fa-search"></i>
             </button>
             
             <!-- Menu Toggle Button -->
@@ -364,22 +409,21 @@
                 <button onclick="window.toggleSideMenu()" class="p-2 text-xl hover:text-primary-color"><i class="fas fa-times"></i></button>
             </div>
             
-            <!-- Categories Section -->
-            <div class="mb-8">
-                <h2 class="text-xl font-extrabold mb-4 border-b border-dark-gray pb-2 text-primary-color">Browse by Category</h2>
-                <div id="categories-container" class="flex flex-wrap gap-2">
-                    <!-- Categories populated by JS -->
-                    <span class="text-sm text-secondary-text">Loading categories...</span>
-                </div>
-            </div>
+            <!-- Removed Categories Section as requested -->
 
             <!-- Navigation Links -->
             <div class="space-y-3 mb-8">
                 <h2 class="text-xl font-extrabold mb-4 border-b border-dark-gray pb-2 text-primary-color">Quick Links</h2>
                 
+                <!-- NEW: English Files Channel Gallery -->
+                <button onclick="window.showEnglishFilesGallery();" class="w-full text-left flex items-center p-3 rounded-lg hover:bg-dark-gray btn-smooth text-lg">
+                    <i class="fas fa-images w-6 text-primary-color"></i> 
+                    <span class="ml-3 font-semibold">English Files Gallery</span>
+                </button>
+                
                 <button onclick="window.bookmarkSite();" class="w-full text-left flex items-center p-3 rounded-lg hover:bg-dark-gray btn-smooth text-lg">
                     <i class="fas fa-bookmark w-6 text-primary-color"></i> 
-                    <span class="ml-3 font-semibold">Bookmark Site</span>
+                    <span class="ml-3 font-semibold">Permanent Backup Site</span>
                 </button>
                 
                 <a id="telegram-link-menu" href="#" target="_blank" onclick="window.toggleSideMenu()" class="w-full text-left flex items-center p-3 rounded-lg hover:bg-dark-gray btn-smooth text-lg">
@@ -395,7 +439,7 @@
             
             <!-- Footer in Menu -->
             <p class="text-xs text-center text-secondary-text mt-10">
-                Data provided by <span class="font-bold text-primary-color">ADULT-HUB API</span>
+                Data provided by <span class="font-bold" style="color: var(--primary-color);">ADULT-HUB API</span>
             </p>
         </div>
     </div>
@@ -430,12 +474,12 @@
     <!-- Video Player Page (Hidden by default) -->
     <div id="video-player-page" class="hidden pt-20 pb-16 px-4 md:px-8">
         <!-- Back Button -->
-        <button onclick="window.showMainPage()" class="mb-6 px-4 py-2 bg-dark-gray hover:bg-[#4b5563] text-white rounded-xl font-semibold btn-smooth shadow-lg">
+        <button onclick="window.showMainPage()" class="mb-6 px-4 py-2 bg-dark-gray hover:bg-[#555555] text-white rounded-xl font-semibold btn-smooth shadow-lg">
             <i class="fas fa-arrow-left mr-2"></i> Back to Content
         </button>
 
         <!-- Video Title -->
-        <h1 id="video-player-title" class="text-3xl md:text-4xl font-extrabold mb-6 text-primary-color">Video Title</h1>
+        <h1 id="video-player-title" class="text-3xl md:text-4xl font-extrabold mb-6" style="color: var(--primary-color);">Video Title</h1>
 
         <!-- Video Iframe -->
         <div class="video-player-iframe-container mb-8">
@@ -450,7 +494,7 @@
         
         <!-- Similar Content Section -->
         <div id="similar-content-section">
-            <h2 class="text-2xl font-bold mb-4 text-primary-color border-b border-dark-gray pb-2">More Like This</h2>
+            <h2 class="text-2xl font-bold mb-4" style="color: var(--primary-color);">More Like This</h2>
             
             <div id="similar-content-loading" class="text-center py-6 hidden" style="color: var(--primary-color);">
                 <i class="fas fa-spinner fa-spin mr-2"></i> Loading similar content...
@@ -464,7 +508,7 @@
         </div>
     </div>
 
-    <!-- Custom Modal Structure -->
+    <!-- Custom Modal Structure (For Info/Alerts) -->
     <div id="custom-modal">
         <div class="modal-content text-center">
             <div id="modal-message" class="text-lg">
@@ -473,6 +517,28 @@
             <div id="modal-buttons" class="mt-6 grid grid-cols-2 gap-4">
                 <!-- Buttons will be inserted here by JS -->
             </div>
+        </div>
+    </div>
+    
+    <!-- Gallery Modal Structure (Full Screen) -->
+    <div id="gallery-modal" class="fixed top-0 left-0 w-full h-full bg-black bg-opacity-95 hidden z-[110] p-4 md:p-8 overflow-y-auto">
+        <div class="flex justify-end">
+            <button onclick="window.closeGalleryModal()" class="text-4xl text-white hover:text-primary-color transition-colors fixed top-4 right-4 z-[120]">
+                <i class="fas fa-times-circle"></i>
+            </button>
+        </div>
+        <div class="max-w-7xl mx-auto pt-10">
+            <h2 class="text-3xl font-bold text-center mb-10" style="color: var(--primary-color);">English Files Gallery</h2>
+            <div id="gallery-grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                <!-- Images will be injected here -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Image Viewer Sub-Modal -->
+    <div id="image-viewer-modal" onclick="window.closeImageViewer()">
+        <div class="image-content" onclick="event.stopPropagation()">
+            <img id="image-viewer-img" src="" alt="Full-screen image" />
         </div>
     </div>
     
@@ -485,8 +551,8 @@
     </button>
     
     <!-- Footer -->
-    <footer class="bg-card-dark py-6 text-center text-sm text-secondary-text border-t border-[#374151]">
-        <p>&copy; 2024 Adult Hub | All Rights Reserved. | <a id="footer-telegram-link" href="#" target="_blank" class="text-primary-color hover:underline">Join Telegram</a></p>
+    <footer class="py-6 text-center text-sm text-secondary-text border-t" style="background-color: var(--card-dark); border-color: var(--dark-gray);">
+        <p>&copy; 2024 Adult Hub | All Rights Reserved. | <a id="footer-telegram-link" href="#" target="_blank" style="color: var(--primary-color);" class="hover:underline">Join Telegram</a></p>
     </footer>
 
     <!-- JavaScript Logic -->
