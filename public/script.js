@@ -1,17 +1,19 @@
 // --- CONFIGURATION CONSTANTS ---
-// INSERT YOUR API BASE URL HERE
 const API_BASE_URL = 'https://confident-jemima-school1660440-5a325843.koyeb.app';
-
-// INSERT YOUR TELEGRAM URL HERE
-const TELEGRAM_URL = 'https://t.me/+oOdTY-zbwCY3MzA1';
-
-// INSERT YOUR BOOKMARK SITE URL HERE
+const TELEGRAM_URL = 'https://t.me/+oOdTY-zbwCY3MzA1'; // Shared for both Telegram channel and English Files link
 const BOOKMARK_SITE_URL = 'https://domains-kappa.vercel.app/';
 
 // API Endpoints
 const CONTENT_ENDPOINT = `${API_BASE_URL}/api/content`;
 const TRACK_VIEW_ENDPOINT = `${API_BASE_URL}/api/track-view`;
-const CATEGORIES_ENDPOINT = `${API_BASE_URL}/api/categories`; 
+
+// English Files Gallery Images
+const ENGLISH_FILES_IMAGES = [
+    'https://files.catbox.moe/m23zt8.jpg',
+    'https://files.catbox.moe/rcbs9i.jpg',
+    'https://files.catbox.moe/pdrziv.jpg',
+    'https://files.catbox.moe/nrqydw.jpg'
+];
 
 // App Configuration
 const ITEMS_PER_PAGE = 20;
@@ -23,7 +25,6 @@ const SIMILAR_CONTENT_LIMIT = 6;
 let currentPage = 0; 
 let totalPages = 0;
 let lastScrollTop = 0; 
-let currentFilterCategory = ''; 
 let isLoading = false; 
 let retryTimeout = null; 
 let countdownInterval = null; 
@@ -32,10 +33,11 @@ let similarContentPage = 1;
 let hasMoreSimilarContent = true; 
 
 // --- DOM Elements ---
-let header, grid, pageInfo, categoriesContainer, searchInput, statusContainer, statusMessage;
+let header, grid, pageInfo, searchInput, statusContainer, statusMessage;
 let fabScrollTop, pageNumbersContainer, mainContent, videoPlayerPage, videoPlayerTitle;
 let videoPlayerIframe, videoLinksContainer, similarContentGrid, similarContentLoading;
 let loadMoreButton, similarContentSection, sideMenu, menuBackdrop, searchContainer;
+let galleryModal, galleryGrid, imageViewerModal, imageViewerImg;
 
 // Initialize the application
 document.addEventListener('DOMContentLoaded', () => {
@@ -47,7 +49,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     window.loadContent(1); // Initial content load
-    window.fetchCategories(); 
 });
 
 /**
@@ -57,7 +58,6 @@ function initializeDOMElements() {
     header = document.querySelector('header');
     grid = document.getElementById('content-grid');
     pageInfo = document.getElementById('page-info');
-    categoriesContainer = document.getElementById('categories-container');
     searchInput = document.getElementById('search-input');
     statusContainer = document.getElementById('status-container');
     statusMessage = document.getElementById('status-message');
@@ -75,14 +75,26 @@ function initializeDOMElements() {
     menuBackdrop = document.querySelector('.menu-backdrop');
     searchContainer = document.getElementById('search-container');
     
+    // NEW Gallery Elements
+    galleryModal = document.getElementById('gallery-modal');
+    galleryGrid = document.getElementById('gallery-grid');
+    imageViewerModal = document.getElementById('image-viewer-modal');
+    imageViewerImg = document.getElementById('image-viewer-img');
+    
     // Create Load More button for similar content
     loadMoreButton = document.createElement('button');
     loadMoreButton.id = 'load-more-similar';
-    loadMoreButton.className = 'load-more-btn mt-6 mx-auto px-6 py-3 text-background-dark rounded-xl font-semibold btn-smooth hidden';
+    loadMoreButton.className = 'load-more-btn mx-auto px-6 py-3 text-background-dark rounded-xl font-semibold btn-smooth hidden';
     loadMoreButton.style.backgroundColor = 'var(--primary-color)';
     loadMoreButton.innerHTML = '<i class="fas fa-plus-circle mr-2"></i> Load More Similar Content';
     loadMoreButton.onclick = () => window.loadMoreSimilarContent();
-    similarContentSection.appendChild(loadMoreButton);
+    
+    if(similarContentSection) {
+        const divider = document.createElement('div');
+        divider.className = 'mt-6';
+        similarContentSection.appendChild(divider);
+        similarContentSection.appendChild(loadMoreButton);
+    }
 }
 
 /**
@@ -181,15 +193,14 @@ function showCustomModal(message, buttons) {
         const buttonElement = document.createElement('button');
         buttonElement.innerHTML = btn.text;
         
-        // Define button styles based on context
         let baseClass = 'px-4 py-3 rounded-xl font-semibold btn-smooth focus:outline-none text-sm col-span-1';
         let styleClass = '';
         if (btn.type === 'confirm') {
             styleClass = 'bg-primary-color hover:bg-secondary-color text-background-dark shadow-md';
         } else if (btn.type === 'cancel') {
-             styleClass = 'bg-dark-gray hover:bg-[#4b5563] text-white';
+             styleClass = 'bg-dark-gray hover:bg-[#555555] text-white';
         } else {
-            styleClass = 'bg-dark-gray hover:bg-[#4b5563] text-white';
+            styleClass = 'bg-dark-gray hover:bg-[#555555] text-white';
         }
 
         buttonElement.className = `${baseClass} ${styleClass}`; 
@@ -214,16 +225,16 @@ function showCustomModal(message, buttons) {
  * Shows the About Modal.
  */
 window.showAboutModal = () => {
-    const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--primary-color') || '#4ade80';
+    const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--primary-color') || '#ff005c';
     const message = `
         <p style="color: ${primaryColor}; font-weight:900; font-size:1.6em; margin-bottom: 25px;">
             <i class="fas fa-info-circle"></i> About This Hub
         </p>
         <p style="text-align: center; margin-bottom: 20px; font-size: 1.1em; color: var(--text-primary);">
-            Welcome to the Minimalist Content Hub.
+            Welcome to the Modern Content Hub.
         </p>
         <p style="font-size: 0.9em; text-align: center; color: var(--text-secondary);">
-            The modern interface ensures a smooth experience across all devices. Data is sourced from a dedicated backend API.
+            This sleek, minimalist interface ensures a smooth experience across all devices. Data is sourced from a dedicated backend API.
         </p>
     `;
 
@@ -242,8 +253,8 @@ window.showAboutModal = () => {
  * Handles the "Bookmark Site" button click, showing the backup URL and report info.
  */
 window.bookmarkSite = () => {
-    const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--primary-color') || '#4ade80';
-    const darkGray = getComputedStyle(document.documentElement).getPropertyValue('--card-dark') || '#1f2937';
+    const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--primary-color') || '#ff005c';
+    const darkGray = getComputedStyle(document.documentElement).getPropertyValue('--card-dark') || '#1a1a1a';
     const warningColor = '#ef4444'; // Red for warning
     
     const message = `
@@ -279,6 +290,59 @@ window.bookmarkSite = () => {
     showCustomModal(message, actionButtons);
 };
 
+// --- Gallery Functions ---
+
+/**
+ * Opens the full-screen English Files Gallery modal.
+ */
+window.showEnglishFilesGallery = () => {
+    if (!galleryModal || !galleryGrid) return;
+    
+    window.toggleSideMenu(true); // Close the side menu
+    window.scrollToTop(); // Scroll to top if needed
+    
+    // Populate the gallery grid
+    galleryGrid.innerHTML = ENGLISH_FILES_IMAGES.map(url => `
+        <div class="gallery-image-wrapper" onclick="window.showImageInViewer('${url}')">
+            <img src="${url}" loading="lazy" alt="English File Thumbnail" 
+                 onerror="this.onerror=null; this.src='https://placehold.co/400x300/1a1a1a/ff005c?text=Image+Unavailable'">
+            <div class="absolute bottom-0 left-0 right-0 p-2 bg-black bg-opacity-70 text-center text-sm font-semibold text-white">
+                View Full Image
+            </div>
+        </div>
+    `).join('');
+    
+    galleryModal.style.display = 'block';
+};
+
+/**
+ * Closes the full-screen Gallery modal.
+ */
+window.closeGalleryModal = () => {
+    if (galleryModal) galleryModal.style.display = 'none';
+    window.closeImageViewer(); // Ensure viewer is closed too
+};
+
+/**
+ * Opens the full-screen image viewer sub-modal.
+ */
+window.showImageInViewer = (imageUrl) => {
+    if (!imageViewerModal || !imageViewerImg) return;
+    
+    imageViewerImg.src = imageUrl;
+    imageViewerModal.style.display = 'flex';
+};
+
+/**
+ * Closes the full-screen image viewer sub-modal.
+ */
+window.closeImageViewer = () => {
+    if (imageViewerModal) imageViewerModal.style.display = 'none';
+    imageViewerImg.src = ''; // Clear image source
+};
+
+// --- Video Player Functions ---
+
 /**
  * Shows the video player page with the selected content
  */
@@ -303,24 +367,26 @@ window.showVideoPlayer = (content) => {
     videoLinksContainer.innerHTML = '';
     
     if (content.links && content.links.length > 0) {
+        // Set the first link as default player source
         videoPlayerIframe.src = content.links[0].url;
 
         content.links.forEach((link, index) => {
             const linkButton = document.createElement('button');
             const isActive = index === 0 ? 'active' : '';
             
-            linkButton.className = `episode-link-chip px-3 py-2 btn-smooth ${isActive}`;
+            linkButton.className = `episode-link-chip px-3 py-2 btn-smooth rounded-lg text-sm ${isActive}`;
             linkButton.textContent = link.episode_title || `Link ${index + 1}`;
             
-            // Set style for link buttons (defined inline here for simplicity)
+            // Set style for link buttons
             linkButton.style.backgroundColor = 'var(--dark-gray)';
             linkButton.style.color = 'var(--text-primary)';
             if (isActive) {
                  linkButton.style.backgroundColor = 'var(--primary-color)';
                  linkButton.style.color = 'var(--background-dark)';
             }
-            linkButton.onmouseover = () => linkButton.style.backgroundColor = isActive ? 'var(--secondary-color)' : '#4b5563';
-            linkButton.onmouseout = () => linkButton.style.backgroundColor = isActive ? 'var(--primary-color)' : 'var(--dark-gray)';
+            // Add hover effect
+            linkButton.onmouseover = () => linkButton.style.backgroundColor = linkButton.classList.contains('active') ? 'var(--secondary-color)' : '#555555';
+            linkButton.onmouseout = () => linkButton.style.backgroundColor = linkButton.classList.contains('active') ? 'var(--primary-color)' : 'var(--dark-gray)';
 
 
             linkButton.onclick = (event) => {
@@ -328,10 +394,15 @@ window.showVideoPlayer = (content) => {
                     btn.classList.remove('active');
                     btn.style.backgroundColor = 'var(--dark-gray)';
                     btn.style.color = 'var(--text-primary)';
+                    btn.onmouseover = () => btn.style.backgroundColor = '#555555';
+                    btn.onmouseout = () => btn.style.backgroundColor = 'var(--dark-gray)';
                 });
                 event.target.classList.add('active');
                 event.target.style.backgroundColor = 'var(--primary-color)';
                 event.target.style.color = 'var(--background-dark)';
+                event.target.onmouseover = () => event.target.style.backgroundColor = 'var(--secondary-color)';
+                event.target.onmouseout = () => event.target.style.backgroundColor = 'var(--primary-color)';
+
 
                 videoPlayerIframe.src = link.url;
             };
@@ -388,7 +459,6 @@ window.loadSimilarContent = async (content, page = 1, clearExisting = false) => 
     loadMoreButton.classList.add('hidden');
 
     try {
-        // Use the first tag for similarity matching
         const tag = content.tags[0];
         const url = `${CONTENT_ENDPOINT}?tag=${encodeURIComponent(tag)}&limit=${SIMILAR_CONTENT_LIMIT}&page=${page}`; 
         
@@ -466,7 +536,7 @@ const createSimilarContentCard = (content) => {
         : content.title;
         
     const views = content.views !== undefined && !isNaN(content.views) ? Number(content.views).toLocaleString() : '0';
-    const staticThumbnail = content.thumbnail_url || 'https://placehold.co/300x200/1f2937/4ade80?text=ADULT-HUB';
+    const staticThumbnail = content.thumbnail_url || 'https://placehold.co/300x200/1a1a1a/ff005c?text=ADULT-HUB';
     
     const contentString = JSON.stringify(content).replace(/"/g, '&quot;');
     
@@ -476,13 +546,14 @@ const createSimilarContentCard = (content) => {
                 <img class="similar-card-image" 
                      src="${staticThumbnail}" 
                      alt="${content.title}" 
-                     onerror="this.onerror=null; this.src='https://placehold.co/300x200/1f2937/4ade80?text=ADULT-HUB Placeholder'">
+                     loading="lazy"
+                     onerror="this.onerror=null; this.src='https://placehold.co/300x200/1a1a1a/ff005c?text=ADULT-HUB Placeholder'">
             </div>
             <div class="similar-card-info">
                 <h3 class="similar-card-title text-sm font-extrabold text-white mb-1" title="${content.title}">${truncatedTitle}</h3>
-                <div class="similar-card-meta text-xs text-secondary-text">
+                <div class="similar-card-meta text-xs text-secondary-text flex items-center justify-between">
                     <span class="flex items-center"><i class="fas fa-eye mr-1 text-primary-color"></i> ${views}</span>
-                    <span class="ml-2">${content.type ? content.type.toUpperCase() : 'UNKNOWN'}</span>
+                    <span>${content.type ? content.type.toUpperCase() : 'UNKNOWN'}</span>
                 </div>
             </div>
         </div>
@@ -543,12 +614,10 @@ window.toggleSearchBar = (forceClose = false) => {
         searchContainer.style.top = `${header.offsetHeight}px`; // Reset for smooth closing transition
         searchContainer.style.top = '-100px'; 
         
-        // If search was active, but input is now empty, treat it as closing
+        // If search was active, but input is now empty, re-load content
         const wasSearching = searchInput.value.trim() !== '';
-        if (!forceClose && !wasSearching && (wasSearching || currentFilterCategory)) {
-            currentFilterCategory = ''; 
+        if (wasSearching) {
             window.loadContent(1); 
-            window.fetchCategories(); 
         }
         searchInput.value = '';
     } else {
@@ -556,52 +625,6 @@ window.toggleSearchBar = (forceClose = false) => {
         searchContainer.style.top = `${header.offsetHeight}px`; // Ensure it slides down right under header
         searchInput.focus();
     }
-};
-
-/**
- * Fetches and renders unique content categories inside the side menu.
- */
-window.fetchCategories = async () => {
-    if (!categoriesContainer) return;
-    
-    if (categoriesContainer.innerHTML.includes('No categories available') || categoriesContainer.innerHTML.includes('Failed to load categories') || categoriesContainer.innerHTML === '') {
-         categoriesContainer.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Loading categories...';
-    } 
-
-    try {
-        const response = await fetchWithRetry(CATEGORIES_ENDPOINT, {}, 2); 
-        const data = await response.json();
-
-        if (data.success && data.tags && data.tags.length > 0) {
-            
-            let categoriesHtml = `<span class="chip ${currentFilterCategory === '' ? 'active-category' : ''} px-3 py-1 rounded-full text-xs font-medium cursor-pointer btn-smooth" onclick="window.filterByCategory('')">All Content</span>`;
-            
-            categoriesHtml += data.tags.map(category => {
-                const isActive = category === currentFilterCategory ? 'active-category' : '';
-                return `<span class="chip ${isActive} px-3 py-1 rounded-full text-xs font-medium cursor-pointer btn-smooth" onclick="window.filterByCategory('${category}')">${category}</span>`;
-            }).join('');
-            
-            categoriesContainer.innerHTML = categoriesHtml;
-        } else {
-            categoriesContainer.innerHTML = '<span class="text-sm text-secondary-text">No categories available.</span>';
-        }
-    } catch (error) {
-        console.error("Category Fetch Error:", error);
-        categoriesContainer.innerHTML = '<span class="text-sm text-red-500">Failed to load categories.</span>';
-    }
-};
-
-/**
- * Handles filtering content by clicking a category chip.
- */
-window.filterByCategory = (category) => {
-    searchInput.value = ''; 
-    
-    currentFilterCategory = category; 
-    
-    window.loadContent(1);
-    window.fetchCategories(); // Re-render categories to ensure highlighting is correct
-    window.toggleSideMenu(); // Close the menu after selecting a category
 };
 
 /**
@@ -620,11 +643,10 @@ const createContentCard = (content) => {
     const date = content.created_at ? new Date(content.created_at).toLocaleDateString() : 'N/A';
     const views = content.views !== undefined && !isNaN(content.views) ? Number(content.views).toLocaleString() : '0';
     
-    const staticThumbnail = content.thumbnail_url || 'https://placehold.co/300x200/1f2937/4ade80?text=ADULT-HUB';
+    const staticThumbnail = content.thumbnail_url || 'https://placehold.co/300x200/1a1a1a/ff005c?text=ADULT-HUB';
     
     const contentString = JSON.stringify(content).replace(/"/g, '&quot;');
     
-    // MODIFICATION START: Updated action area for centering and full-width button on mobile
     const actionAreaHtml = `
         <div class="action-button mt-4 flex justify-center w-full">
             <button class="watch-btn btn-smooth shadow-xl w-full sm:w-auto text-lg" onclick="event.stopPropagation(); window.showVideoPlayer('${contentString}')">
@@ -632,7 +654,6 @@ const createContentCard = (content) => {
             </button>
         </div>
     `;
-    // MODIFICATION END: Updated action area for centering and full-width button on mobile
 
     card.onclick = () => window.showVideoPlayer(contentString);
 
@@ -641,13 +662,14 @@ const createContentCard = (content) => {
             <img class="card-image" 
                     src="${staticThumbnail}" 
                     alt="${content.title}" 
-                    onerror="this.onerror=null; this.src='https://placehold.co/300x200/1f2937/4ade80?text=ADULT-HUB Placeholder'}">
+                    loading="lazy"
+                    onerror="this.onerror=null; this.src='https://placehold.co/300x200/1a1a1a/ff005c?text=ADULT-HUB Placeholder'}">
         </div>
         
         <div class="card-info p-5 flex flex-col flex-grow">
             <h3 class="text-xl font-extrabold mb-2" title="${content.title}">${truncatedTitle}</h3>
             <div class="flex justify-between text-sm text-secondary-text mb-2">
-                <span class="font-semibold"><i class="fas fa-tag text-primary-color mr-1"></i> ${content.type ? content.type.toUpperCase() : 'UNKNOWN'}</span>
+                <span class="font-semibold"><i class="fas fa-video text-primary-color mr-1"></i> ${content.type ? content.type.toUpperCase() : 'UNKNOWN'}</span>
                 <span><i class="fas fa-calendar-alt text-primary-color mr-1"></i> ${date}</span>
             </div>
             <p class="flex items-center text-sm mb-2 text-secondary-text">
@@ -655,7 +677,7 @@ const createContentCard = (content) => {
                 Views: <strong class="views-count ml-1 text-white">${views}</strong>
             </p>
             ${actionAreaHtml}
-            <div class="mt-auto pt-4 border-t border-[#374151] flex flex-wrap gap-2">${tagsHtml}</div>
+            <div class="mt-auto pt-4 border-t border-[#333333] flex flex-wrap gap-2">${tagsHtml}</div>
         </div>
     `;
     
@@ -718,7 +740,7 @@ const renderPageNumbers = (totalPages, currentPage) => {
 };
 
 /**
- * Fetches and displays content based on current page and search query/category filter.
+ * Fetches and displays content based on current page and search query.
  */
 window.loadContent = async (page = 1) => {
     clearRetryTimers();
@@ -727,12 +749,6 @@ window.loadContent = async (page = 1) => {
 
     const pageToLoad = page < 1 ? 1 : page; 
     
-    // Hide search bar if content is being loaded (or cleared)
-    if (searchContainer.classList.contains('active') && !searchInput.value.trim() && !currentFilterCategory) {
-        window.toggleSearchBar(true); 
-    }
-
-
     // 1. Set Loading State
     isLoading = true;
     statusContainer.style.display = 'block';
@@ -746,9 +762,6 @@ window.loadContent = async (page = 1) => {
     
     if (searchInput.value.trim()) {
         url += `&q=${encodeURIComponent(searchInput.value.trim())}`; 
-        currentFilterCategory = ''; 
-    } else if (currentFilterCategory) {
-         url += `&tag=${encodeURIComponent(currentFilterCategory)}`;
     }
 
     try {
@@ -771,8 +784,6 @@ window.loadContent = async (page = 1) => {
             let message = '😢 No content is currently available.';
             if (searchInput.value.trim()) {
                 message = `😢 No results found for "<strong class="text-primary-color">${searchInput.value.trim()}</strong>". Try simplifying your search.`;
-            } else if (currentFilterCategory) {
-                message = `😢 No content found in category: "<strong class="text-primary-color">${currentFilterCategory}</strong>".`;
             }
             
             statusMessage.innerHTML = message;
